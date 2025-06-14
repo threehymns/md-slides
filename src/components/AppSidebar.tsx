@@ -409,6 +409,11 @@ export function AppSidebar() {
     }
   };
 
+  const handleSlideDeckSelect = (deckId: string) => {
+    setCurrentPresentation(null); // Deactivate current presentation
+    setCurrentSlideDeck(deckId);
+  };
+
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
@@ -486,7 +491,7 @@ export function AppSidebar() {
                   key={deck.id}
                   deck={deck}
                   isSelected={currentSlideDeckId === deck.id}
-                  onSelect={() => setCurrentSlideDeck(deck.id)}
+                  onSelect={() => handleSlideDeckSelect(deck.id)}
                   onDelete={() => deleteSlideDeck(deck.id)}
                   onRename={(newTitle) => updateSlideDeck(deck.id, { title: newTitle })}
                 />
