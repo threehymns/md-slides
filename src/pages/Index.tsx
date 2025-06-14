@@ -4,19 +4,19 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import MarkdownEditor from '@/components/MarkdownEditor';
 import Slideshow from '@/components/Slideshow';
-import { useSlideDecks } from '@/contexts/SlideDecksContext';
+import { usePresentations } from '@/contexts/PresentationsContext';
 
 const Index = () => {
-  const { getCurrentDeck, updateDeck, currentDeckId } = useSlideDecks();
+  const { getCurrentSlideDeck, updateSlideDeck, currentSlideDeckId, getCurrentPresentation } = usePresentations();
   const [isPresenting, setIsPresenting] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
-  const currentDeck = getCurrentDeck();
+  const currentDeck = getCurrentSlideDeck();
+  const currentPresentation = getCurrentPresentation();
   const markdown = currentDeck?.content || '';
 
   const handleMarkdownChange = (newContent: string) => {
-    if (currentDeck) {
-      updateDeck(currentDeck.id, { content: newContent });
+    if (currentDeck && currentPresentation) {
+      updateSlideDeck(currentPresentation.id, currentDeck.id, { content: newContent });
     }
   };
 
@@ -28,10 +28,6 @@ const Index = () => {
 
   const handleExitPresentation = () => {
     setIsPresenting(false);
-  };
-
-  const handleDarkModeToggle = () => {
-    setIsDarkMode(!isDarkMode);
   };
 
   // Handle escape key to exit presentation
@@ -47,7 +43,7 @@ const Index = () => {
   }, [isPresenting]);
 
   if (isPresenting) {
-    return <Slideshow markdown={markdown} isDarkMode={isDarkMode} onDarkModeToggle={handleDarkModeToggle} />;
+    return <Slideshow markdown={markdown} />;
   }
 
   return (
@@ -63,14 +59,12 @@ const Index = () => {
               markdown={markdown}
               onMarkdownChange={handleMarkdownChange}
               onStartPresentation={handleStartPresentation}
-              isDarkMode={isDarkMode}
-              onDarkModeToggle={handleDarkModeToggle}
             />
           ) : (
-            <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'dark bg-gray-900 text-white' : 'bg-gray-50'}`}>
+            <div className="min-h-screen flex items-center justify-center bg-background">
               <div className="text-center">
                 <h1 className="text-2xl font-bold mb-4">Welcome to Markdown Slideshow</h1>
-                <p className="text-gray-600 dark:text-gray-400">Select a presentation from the sidebar or create a new one to get started.</p>
+                <p className="text-muted-foreground">Select a slide deck from the sidebar or create a new presentation to get started.</p>
               </div>
             </div>
           )}

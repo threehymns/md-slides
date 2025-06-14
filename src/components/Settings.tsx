@@ -15,15 +15,13 @@ interface SettingsProps {
     autoHideControls: boolean;
   };
   onSettingsChange: (settings: any) => void;
-  isDarkMode: boolean;
 }
 
 const Settings: React.FC<SettingsProps> = ({
   isOpen,
   onClose,
   settings,
-  onSettingsChange,
-  isDarkMode
+  onSettingsChange
 }) => {
   // Handle escape key to close settings modal
   useEffect(() => {
@@ -52,8 +50,8 @@ const Settings: React.FC<SettingsProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className={`relative w-full max-w-md mx-4 rounded-lg shadow-lg ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}>
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="relative w-full max-w-md mx-4 rounded-lg shadow-lg bg-card text-card-foreground">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <h2 className="text-xl font-semibold">Presentation Settings</h2>
           <Button
             variant="ghost"
@@ -111,7 +109,7 @@ const Settings: React.FC<SettingsProps> = ({
           </div>
         </div>
 
-        <div className={`p-4 border-t text-xs ${isDarkMode ? 'border-gray-700 text-gray-400' : 'border-gray-200 text-gray-500'}`}>
+        <div className="p-4 border-t border-border text-xs text-muted-foreground">
           <p><strong>Keyboard shortcuts:</strong></p>
           <p>Arrow keys / Space: Navigate • D: Dark mode • S: Settings • Esc: Exit</p>
         </div>

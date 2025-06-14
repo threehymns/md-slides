@@ -2,14 +2,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { marked } from 'marked';
 import Settings from './Settings';
+import { useTheme } from '@/components/ThemeProvider';
 
 interface SlideshowProps {
   markdown: string;
-  isDarkMode: boolean;
-  onDarkModeToggle: () => void;
 }
 
-const Slideshow: React.FC<SlideshowProps> = ({ markdown, isDarkMode, onDarkModeToggle }) => {
+const Slideshow: React.FC<SlideshowProps> = ({ markdown }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState({
@@ -18,6 +17,11 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown, isDarkMode, onDarkModeT
     showNavigationHint: true,
     autoHideControls: false
   });
+  const { theme, setTheme } = useTheme();
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
 
   // Parse markdown and split into slides - only split on --- that are on their own line
   const slides = useMemo(() => {
@@ -63,7 +67,7 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown, isDarkMode, onDarkModeT
         case 'D':
           event.preventDefault();
           if (!showSettings) {
-            onDarkModeToggle();
+            toggleTheme();
           }
           break;
         case 's':
@@ -74,7 +78,6 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown, isDarkMode, onDarkModeT
         case 'Escape':
           event.preventDefault();
           if (!showSettings) {
-            // Only exit presentation if settings are not open
             window.history.back();
           }
           break;
@@ -83,25 +86,25 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown, isDarkMode, onDarkModeT
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [slides.length, onDarkModeToggle, showSettings]);
+  }, [slides.length, showSettings, theme, setTheme]);
 
   if (slides.length === 0) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <h2 className={`text-2xl font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-500'}`}>No slides found</h2>
-          <p className={isDarkMode ? 'text-gray-300' : 'text-gray-500'}>Add some markdown content separated by "---" to create slides</p>
+          <h2 className="text-2xl font-semibold mb-2 text-foreground">No slides found</h2>
+          <p className="text-muted-foreground">Add some markdown content separated by "---" to create slides</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen flex flex-col relative overflow-hidden ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-black'}`}>
+    <div className="min-h-screen flex flex-col relative overflow-hidden bg-background text-foreground">
       {/* Slide Content */}
       <div className="flex-1 flex items-center justify-center p-8 md:p-16 overflow-hidden">
         <div 
-          className="prose max-w-none w-full h-full flex flex-col justify-center text-center overflow-hidden"
+          className="prose dark:prose-invert max-w-none w-full h-full flex flex-col justify-center text-center overflow-hidden"
           style={{ fontSize: '10vh', lineHeight: '1.2' }}
           dangerouslySetInnerHTML={{ __html: slides[currentSlide] }}
         />
@@ -111,7 +114,7 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown, isDarkMode, onDarkModeT
       {settings.showSlideCounter && (
         <div className={`absolute bottom-4 right-4 text-sm font-mono transition-opacity duration-300 ${
           settings.autoHideControls ? 'opacity-30 hover:opacity-100' : ''
-        } ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`}>
+        } text-muted-foreground`}>
           {currentSlide + 1} / {slides.length}
         </div>
       )}
@@ -120,9 +123,9 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown, isDarkMode, onDarkModeT
       {settings.showProgressBar && (
         <div className={`absolute bottom-0 left-0 w-full h-1 transition-opacity duration-300 ${
           settings.autoHideControls ? 'opacity-30 hover:opacity-100' : ''
-        } ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+        } bg-muted`}>
           <div 
-            className="h-full bg-blue-500 transition-all duration-300 ease-out"
+            className="h-full bg-primary transition-all duration-300 ease-out"
             style={{ width: `${((currentSlide + 1) / slides.length) * 100}%` }}
           />
         </div>
@@ -132,7 +135,7 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown, isDarkMode, onDarkModeT
       {settings.showNavigationHint && currentSlide === 0 && slides.length > 1 && (
         <div className={`absolute bottom-4 left-4 text-xs transition-opacity duration-300 ${
           settings.autoHideControls ? 'opacity-30 hover:opacity-100' : ''
-        } ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`}>
+        } text-muted-foreground`}>
           Use arrow keys, spacebar to navigate • Press 'd' for dark mode • Press 's' for settings
         </div>
       )}
@@ -143,7 +146,6 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown, isDarkMode, onDarkModeT
         onClose={() => setShowSettings(false)}
         settings={settings}
         onSettingsChange={setSettings}
-        isDarkMode={isDarkMode}
       />
     </div>
   );
