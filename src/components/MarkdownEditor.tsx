@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Settings as SettingsIcon } from 'lucide-react';
+import Settings from './Settings';
 
 interface MarkdownEditorProps {
   markdown: string;
@@ -20,6 +21,14 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   isDarkMode,
   onDarkModeToggle
 }) => {
+  const [showSettings, setShowSettings] = useState(false);
+  const [settings, setSettings] = useState({
+    showProgressBar: false,
+    showSlideCounter: true,
+    showNavigationHint: true,
+    autoHideControls: false
+  });
+
   const sampleMarkdown = `# Welcome to Markdown Slideshow
 
 This is your first slide. Write your content here using standard markdown.
@@ -85,13 +94,21 @@ Separate slides with \`---\``;
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <Sun className="h-4 w-4" />
+                <Sun className={`h-4 w-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} />
                 <Switch
                   checked={isDarkMode}
                   onCheckedChange={onDarkModeToggle}
                 />
-                <Moon className="h-4 w-4" />
+                <Moon className={`h-4 w-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} />
               </div>
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSettings(true)}
+                className={isDarkMode ? 'border-gray-600 hover:bg-gray-700' : ''}
+              >
+                <SettingsIcon className="h-4 w-4" />
+              </Button>
               <Button 
                 onClick={onStartPresentation}
                 disabled={!markdown.trim()}
@@ -111,6 +128,7 @@ Separate slides with \`---\``;
                 variant="outline" 
                 size="sm"
                 onClick={() => onMarkdownChange(sampleMarkdown)}
+                className={isDarkMode ? 'border-gray-600 hover:bg-gray-700 text-gray-200' : ''}
               >
                 Load Sample
               </Button>
@@ -130,6 +148,14 @@ Separate slides with \`---\``;
           </div>
         </div>
       </div>
+
+      <Settings
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        settings={settings}
+        onSettingsChange={setSettings}
+        isDarkMode={isDarkMode}
+      />
     </div>
   );
 };

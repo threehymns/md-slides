@@ -73,8 +73,9 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown, isDarkMode, onDarkModeT
           break;
         case 'Escape':
           event.preventDefault();
-          if (showSettings) {
-            setShowSettings(false);
+          if (!showSettings) {
+            // Only exit presentation if settings are not open
+            window.history.back();
           }
           break;
       }
@@ -96,7 +97,7 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown, isDarkMode, onDarkModeT
   }
 
   return (
-    <div className={`min-h-screen flex flex-col relative ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-black'}`}>
+    <div className={`min-h-screen flex flex-col relative overflow-hidden ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-black'}`}>
       {/* Slide Content */}
       <div className="flex-1 flex items-center justify-center p-8 md:p-16 overflow-hidden">
         <div 

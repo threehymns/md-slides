@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -25,6 +25,22 @@ const Settings: React.FC<SettingsProps> = ({
   onSettingsChange,
   isDarkMode
 }) => {
+  // Handle escape key to close settings modal
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        event.preventDefault();
+        event.stopPropagation();
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyPress, true);
+      return () => window.removeEventListener('keydown', handleKeyPress, true);
+    }
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleSettingChange = (key: string, value: boolean) => {
