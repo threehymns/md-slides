@@ -2,8 +2,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Settings as SettingsIcon } from 'lucide-react';
-import Settings from './Settings';
 import { usePresentations } from '@/contexts/PresentationsContext';
 
 interface MarkdownEditorProps {
@@ -18,13 +16,6 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   onStartPresentation
 }) => {
   const { getCurrentSlideDeck, getCurrentPresentation, getPresentationSlideDecks } = usePresentations();
-  const [showSettings, setShowSettings] = useState(false);
-  const [settings, setSettings] = useState({
-    showProgressBar: false,
-    showSlideCounter: true,
-    showNavigationHint: true,
-    autoHideControls: false
-  });
 
   const currentDeck = getCurrentSlideDeck();
   const currentPresentation = getCurrentPresentation();
@@ -107,13 +98,6 @@ Separate slides with \`---\``;
             </div>
             <div className="flex items-center gap-4">
               <Button 
-                variant="outline"
-                size="sm"
-                onClick={() => setShowSettings(true)}
-              >
-                <SettingsIcon className="h-4 w-4" />
-              </Button>
-              <Button 
                 onClick={onStartPresentation}
                 disabled={!canStartPresentation}
                 size="lg"
@@ -158,13 +142,6 @@ Separate slides with \`---\``;
           </div>
         </div>
       </div>
-
-      <Settings
-        isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
-        settings={settings}
-        onSettingsChange={setSettings}
-      />
     </div>
   );
 };

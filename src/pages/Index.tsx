@@ -1,14 +1,24 @@
 
 import React, { useState, useEffect } from 'react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
+import { Settings as SettingsIcon } from 'lucide-react';
 import { AppSidebar } from '@/components/AppSidebar';
 import MarkdownEditor from '@/components/MarkdownEditor';
 import Slideshow from '@/components/Slideshow';
+import Settings from '@/components/Settings';
 import { usePresentations } from '@/contexts/PresentationsContext';
 
 const Index = () => {
   const { getCurrentSlideDeck, updateSlideDeck, currentSlideDeckId, getCurrentPresentation, getPresentationSlideDecks } = usePresentations();
   const [isPresenting, setIsPresenting] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [settings, setSettings] = useState({
+    showProgressBar: false,
+    showSlideCounter: true,
+    showNavigationHint: true,
+    autoHideControls: false
+  });
 
   const currentDeck = getCurrentSlideDeck();
   const currentPresentation = getCurrentPresentation();
@@ -62,8 +72,15 @@ const Index = () => {
     <>
       <AppSidebar />
       <div className="flex-1 flex flex-col">
-        <div className="p-2 border-b">
+        <div className="p-2 border-b flex items-center gap-2">
           <SidebarTrigger />
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={() => setShowSettings(true)}
+          >
+            <SettingsIcon className="h-4 w-4" />
+          </Button>
         </div>
         <div className="flex-1">
           {currentDeck ? (
@@ -85,6 +102,13 @@ const Index = () => {
           )}
         </div>
       </div>
+
+      <Settings
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        settings={settings}
+        onSettingsChange={setSettings}
+      />
     </>
   );
 };
