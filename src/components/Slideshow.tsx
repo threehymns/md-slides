@@ -11,9 +11,12 @@ interface SlideshowProps {
 const Slideshow: React.FC<SlideshowProps> = ({ markdown, isDarkMode, onDarkModeToggle }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Parse markdown and split into slides
+  // Parse markdown and split into slides - only split on --- that are on their own line
   const slides = useMemo(() => {
-    const slideTexts = markdown.split('---').map(slide => slide.trim()).filter(slide => slide.length > 0);
+    const slideTexts = markdown
+      .split(/\n---\n|\r\n---\r\n|\r---\r/)
+      .map(slide => slide.trim())
+      .filter(slide => slide.length > 0);
     return slideTexts.map(slideText => marked(slideText));
   }, [markdown]);
 
@@ -69,7 +72,7 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown, isDarkMode, onDarkModeT
       <div className="flex-1 flex items-center justify-center p-8 md:p-16 overflow-hidden">
         <div 
           className="prose max-w-none w-full h-full flex flex-col justify-center text-center overflow-hidden"
-          style={{ fontSize: '12vh', lineHeight: '1.2' }}
+          style={{ fontSize: '10vh', lineHeight: '1.2' }}
           dangerouslySetInnerHTML={{ __html: slides[currentSlide] }}
         />
       </div>
