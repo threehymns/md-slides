@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 
 interface MarkdownEditorProps {
   markdown: string;
-  onMarkdownChange: (markdown: string) -> void;
+  onMarkdownChange: (markdown: string) => void;
   onStartPresentation: () => void;
 }
 
