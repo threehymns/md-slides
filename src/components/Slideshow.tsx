@@ -100,7 +100,7 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown }) => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden bg-background text-foreground">
+    <div className="w-full min-h-screen flex flex-col relative overflow-hidden bg-background text-foreground">
       {/* Slide Content */}
       <div className="flex-1 flex items-center justify-center p-8 md:p-16 overflow-hidden">
         <div 
