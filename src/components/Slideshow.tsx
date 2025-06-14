@@ -102,10 +102,10 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown }) => {
   return (
     <div className="w-full min-h-screen flex flex-col relative overflow-hidden bg-background text-foreground">
       {/* Slide Content */}
-      <div className="flex-1 flex items-center justify-center p-8 md:p-16 overflow-hidden">
+      <div className="flex-1 flex items-center justify-center overflow-hidden">
         <div 
           className="prose dark:prose-invert max-w-none w-full h-full flex flex-col justify-center text-center overflow-hidden"
-          style={{ fontSize: '10vh', lineHeight: '1.2' }}
+          style={{ fontSize: '5vw', lineHeight: '1.6' }}
           dangerouslySetInnerHTML={{ __html: slides[currentSlide] }}
         />
       </div>
