@@ -7,12 +7,23 @@ import Slideshow from '@/components/Slideshow';
 import { usePresentations } from '@/contexts/PresentationsContext';
 
 const Index = () => {
-  const { getCurrentSlideDeck, updateSlideDeck, currentSlideDeckId, getCurrentPresentation } = usePresentations();
+  const { getCurrentSlideDeck, updateSlideDeck, currentSlideDeckId, getCurrentPresentation, getPresentationSlideDecks } = usePresentations();
   const [isPresenting, setIsPresenting] = useState(false);
 
   const currentDeck = getCurrentSlideDeck();
   const currentPresentation = getCurrentPresentation();
   const markdown = currentDeck?.content || '';
+
+  // Get combined markdown from all slide decks in the current presentation
+  const getPresentationMarkdown = () => {
+    if (!currentPresentation) return '';
+    
+    const slideDecks = getPresentationSlideDecks(currentPresentation.id);
+    return slideDecks
+      .map(deck => deck.content)
+      .filter(content => content.trim())
+      .join('\n\n---\n\n');
+  };
 
   const handleMarkdownChange = (newContent: string) => {
     if (currentDeck) {
@@ -21,7 +32,8 @@ const Index = () => {
   };
 
   const handleStartPresentation = () => {
-    if (markdown.trim()) {
+    const presentationMarkdown = getPresentationMarkdown();
+    if (presentationMarkdown.trim()) {
       setIsPresenting(true);
     }
   };
@@ -43,7 +55,7 @@ const Index = () => {
   }, [isPresenting]);
 
   if (isPresenting) {
-    return <Slideshow markdown={markdown} />;
+    return <Slideshow markdown={getPresentationMarkdown()} />;
   }
 
   return (

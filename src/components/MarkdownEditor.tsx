@@ -17,7 +17,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   onMarkdownChange,
   onStartPresentation
 }) => {
-  const { getCurrentSlideDeck } = usePresentations();
+  const { getCurrentSlideDeck, getCurrentPresentation, getPresentationSlideDecks } = usePresentations();
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState({
     showProgressBar: false,
@@ -27,6 +27,11 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   });
 
   const currentDeck = getCurrentSlideDeck();
+  const currentPresentation = getCurrentPresentation();
+  const presentationSlideDecks = currentPresentation ? getPresentationSlideDecks(currentPresentation.id) : [];
+  
+  // Check if presentation has content to present
+  const canStartPresentation = presentationSlideDecks.some(deck => deck.content.trim());
 
   const sampleMarkdown = `# Welcome to Markdown Slideshow
 
@@ -89,9 +94,16 @@ Separate slides with \`---\``;
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-foreground">
-                {currentDeck?.title || 'Markdown Slideshow'}
+                {currentPresentation?.title || 'Markdown Slideshow'}
               </h1>
-              <p className="mt-1 text-muted-foreground">Create beautiful presentations from markdown</p>
+              <p className="mt-1 text-muted-foreground">
+                {currentDeck ? `Editing: ${currentDeck.title}` : 'Create beautiful presentations from markdown'}
+              </p>
+              {currentPresentation && (
+                <p className="text-sm text-muted-foreground">
+                  Presentation contains {presentationSlideDecks.length} slide deck{presentationSlideDecks.length !== 1 ? 's' : ''}
+                </p>
+              )}
             </div>
             <div className="flex items-center gap-4">
               <Button 
@@ -103,7 +115,7 @@ Separate slides with \`---\``;
               </Button>
               <Button 
                 onClick={onStartPresentation}
-                disabled={!markdown.trim()}
+                disabled={!canStartPresentation}
                 size="lg"
               >
                 Start Presentation
@@ -120,6 +132,7 @@ Separate slides with \`---\``;
                 variant="outline" 
                 size="sm"
                 onClick={() => onMarkdownChange(sampleMarkdown)}
+                disabled={!currentDeck}
               >
                 Load Sample
               </Button>
@@ -129,12 +142,18 @@ Separate slides with \`---\``;
               id="markdown-input"
               value={markdown}
               onChange={(e) => onMarkdownChange(e.target.value)}
-              placeholder="Enter your markdown here... Use --- to separate slides"
+              placeholder={currentDeck ? "Enter your markdown here... Use --- to separate slides" : "Select a slide deck to edit"}
               className="min-h-[500px] font-mono text-sm"
+              disabled={!currentDeck}
             />
             
             <div className="text-xs text-muted-foreground">
               <strong>Tip:</strong> Use <code>---</code> to separate slides. Supports all standard markdown formatting.
+              {currentPresentation && (
+                <span className="block mt-1">
+                  When you start the presentation, all slide decks in "{currentPresentation.title}" will be combined and presented in order.
+                </span>
+              )}
             </div>
           </div>
         </div>
