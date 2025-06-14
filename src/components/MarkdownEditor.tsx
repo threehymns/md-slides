@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -84,7 +85,7 @@ hello('World');
 
 Click "Start Presentation" or replace this content with your own markdown!
 
-Separate slides with \`---``;
+Separate slides with \`---\``;
 
   return (
     <div className={`min-h-screen p-4 ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
