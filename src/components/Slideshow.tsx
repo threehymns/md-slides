@@ -66,9 +66,9 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown, isDarkMode, onDarkModeT
   return (
     <div className={`min-h-screen flex flex-col relative ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-black'}`}>
       {/* Slide Content */}
-      <div className="flex-1 flex items-center justify-center p-8 md:p-16">
+      <div className="flex-1 flex items-center justify-center p-8 md:p-16 overflow-hidden">
         <div 
-          className="prose max-w-none w-full h-full flex flex-col justify-center text-center"
+          className="prose max-w-none w-full h-full flex flex-col justify-center text-center overflow-hidden"
           style={{ fontSize: '12vh', lineHeight: '1.2' }}
           dangerouslySetInnerHTML={{ __html: slides[currentSlide] }}
         />
