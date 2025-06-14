@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Plus, FileText, GripVertical, Trash2, Edit, FolderOpen, Presentation } from 'lucide-react';
+import { Plus, FileText, GripVertical, Trash2, Edit, FolderOpen, Presentation, Search } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -31,7 +31,7 @@ interface DraggablePresentationProps {
   onRename: (newTitle: string) => void;
 }
 
-interface DraggableSlideDeckProps {
+interface DraggableSlideDeckInPresentationProps {
   deck: any;
   index: number;
   presentationId: string;
@@ -42,11 +42,18 @@ interface DraggableSlideDeckProps {
   onDrop: (e: React.DragEvent, index: number) => void;
   isSelected: boolean;
   onSelect: () => void;
+  onRemove: () => void;
+}
+
+interface DraggableSlideDeckProps {
+  deck: any;
+  isSelected: boolean;
+  onSelect: () => void;
   onDelete: () => void;
   onRename: (newTitle: string) => void;
 }
 
-const DraggableSlideDeck: React.FC<DraggableSlideDeckProps> = ({
+const DraggableSlideDeckInPresentation: React.FC<DraggableSlideDeckInPresentationProps> = ({
   deck,
   index,
   presentationId,
@@ -55,6 +62,43 @@ const DraggableSlideDeck: React.FC<DraggableSlideDeckProps> = ({
   onDragEnd,
   onDragOver,
   onDrop,
+  isSelected,
+  onSelect,
+  onRemove
+}) => {
+  return (
+    <div
+      className={`flex items-center gap-2 p-2 ml-4 rounded-md cursor-pointer transition-colors ${
+        isSelected ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent/50'
+      } ${isDragging ? 'opacity-50' : ''}`}
+      draggable
+      onDragStart={() => onDragStart(index)}
+      onDragEnd={onDragEnd}
+      onDragOver={(e) => onDragOver(e, index)}
+      onDrop={(e) => onDrop(e, index)}
+    >
+      <GripVertical className="h-3 w-3 text-sidebar-foreground/50" />
+      <FileText className="h-3 w-3 text-sidebar-foreground/70" />
+      <div className="flex-1 min-w-0" onClick={onSelect}>
+        <span className="text-xs truncate">{deck.title}</span>
+      </div>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-5 w-5 p-0 text-destructive hover:text-destructive"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove();
+        }}
+      >
+        <Trash2 className="h-2 w-2" />
+      </Button>
+    </div>
+  );
+};
+
+const DraggableSlideDeck: React.FC<DraggableSlideDeckProps> = ({
+  deck,
   isSelected,
   onSelect,
   onDelete,
@@ -79,16 +123,20 @@ const DraggableSlideDeck: React.FC<DraggableSlideDeckProps> = ({
     }
   };
 
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData('application/json', JSON.stringify({
+      type: 'slideDeck',
+      deckId: deck.id
+    }));
+  };
+
   return (
     <div
-      className={`flex items-center gap-2 p-2 ml-4 rounded-md cursor-pointer transition-colors ${
+      className={`flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors ${
         isSelected ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent/50'
-      } ${isDragging ? 'opacity-50' : ''}`}
+      }`}
       draggable
-      onDragStart={() => onDragStart(index)}
-      onDragEnd={onDragEnd}
-      onDragOver={(e) => onDragOver(e, index)}
-      onDrop={(e) => onDrop(e, index)}
+      onDragStart={handleDragStart}
     >
       <GripVertical className="h-3 w-3 text-sidebar-foreground/50" />
       <FileText className="h-3 w-3 text-sidebar-foreground/70" />
@@ -149,17 +197,19 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
 }) => {
   const {
     currentSlideDeckId,
-    createSlideDeck,
-    deleteSlideDeck,
     setCurrentSlideDeck,
-    updateSlideDeck,
-    reorderSlideDecks
+    removeSlideDeckFromPresentation,
+    reorderSlideDecksInPresentation,
+    getPresentationSlideDecks,
+    addSlideDeckToPresentation
   } = usePresentations();
   
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(presentation.title);
   const [isOpen, setIsOpen] = useState(isSelected);
   const [draggedDeckIndex, setDraggedDeckIndex] = useState<number | null>(null);
+
+  const presentationSlideDecks = getPresentationSlideDecks(presentation.id);
 
   React.useEffect(() => {
     setIsOpen(isSelected);
@@ -181,11 +231,6 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
     }
   };
 
-  const handleCreateSlideDeck = () => {
-    const title = `Slide Deck ${presentation.slideDecks.length + 1}`;
-    createSlideDeck(presentation.id, title);
-  };
-
   const handleDeckDragStart = (index: number) => {
     setDraggedDeckIndex(index);
   };
@@ -201,7 +246,23 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
   const handleDeckDrop = (e: React.DragEvent, dropIndex: number) => {
     e.preventDefault();
     if (draggedDeckIndex !== null && draggedDeckIndex !== dropIndex) {
-      reorderSlideDecks(presentation.id, draggedDeckIndex, dropIndex);
+      reorderSlideDecksInPresentation(presentation.id, draggedDeckIndex, dropIndex);
+    }
+  };
+
+  const handlePresentationDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handlePresentationDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      if (data.type === 'slideDeck' && data.deckId) {
+        addSlideDeckToPresentation(presentation.id, data.deckId);
+      }
+    } catch (error) {
+      console.error('Error handling drop:', error);
     }
   };
 
@@ -245,17 +306,6 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
               className="h-6 w-6 p-0"
               onClick={(e) => {
                 e.stopPropagation();
-                handleCreateSlideDeck();
-              }}
-            >
-              <Plus className="h-3 w-3" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0"
-              onClick={(e) => {
-                e.stopPropagation();
                 setIsEditing(true);
               }}
             >
@@ -274,9 +324,13 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
             </Button>
           </div>
         </div>
-        <CollapsibleContent className="space-y-1">
-          {presentation.slideDecks.map((deck: any, deckIndex: number) => (
-            <DraggableSlideDeck
+        <CollapsibleContent 
+          className="space-y-1"
+          onDragOver={handlePresentationDragOver}
+          onDrop={handlePresentationDrop}
+        >
+          {presentationSlideDecks.map((deck: any, deckIndex: number) => (
+            <DraggableSlideDeckInPresentation
               key={deck.id}
               deck={deck}
               index={deckIndex}
@@ -288,13 +342,12 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
               onDrop={handleDeckDrop}
               isSelected={currentSlideDeckId === deck.id}
               onSelect={() => setCurrentSlideDeck(deck.id)}
-              onDelete={() => deleteSlideDeck(presentation.id, deck.id)}
-              onRename={(newTitle) => updateSlideDeck(presentation.id, deck.id, { title: newTitle })}
+              onRemove={() => removeSlideDeckFromPresentation(presentation.id, deck.id)}
             />
           ))}
-          {presentation.slideDecks.length === 0 && (
+          {presentationSlideDecks.length === 0 && (
             <div className="text-xs text-sidebar-foreground/60 p-2 ml-4 text-center">
-              No slide decks yet
+              Drop slide decks here
             </div>
           )}
         </CollapsibleContent>
@@ -306,19 +359,35 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
 export function AppSidebar() {
   const {
     presentations,
+    slideDecks,
     currentPresentationId,
+    currentSlideDeckId,
     createPresentation,
     deletePresentation,
     setCurrentPresentation,
     updatePresentation,
-    reorderPresentations
+    reorderPresentations,
+    createSlideDeck,
+    deleteSlideDeck,
+    setCurrentSlideDeck,
+    updateSlideDeck
   } = usePresentations();
   
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredSlideDecks = slideDecks.filter(deck => 
+    deck.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleCreatePresentation = () => {
     const title = `Presentation ${presentations.length + 1}`;
     createPresentation(title);
+  };
+
+  const handleCreateSlideDeck = () => {
+    const title = `Slide Deck ${slideDecks.length + 1}`;
+    createSlideDeck(title);
   };
 
   const handleDragStart = (index: number) => {
@@ -344,20 +413,22 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="p-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Presentations</h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleCreatePresentation}
-            className="h-8 w-8 p-0"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
+          <h2 className="text-lg font-semibold">Slideshow Manager</h2>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>My Presentations</SidebarGroupLabel>
+          <div className="flex items-center justify-between">
+            <SidebarGroupLabel>Presentations</SidebarGroupLabel>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCreatePresentation}
+              className="h-6 w-6 p-0"
+            >
+              <Plus className="h-3 w-3" />
+            </Button>
+          </div>
           <SidebarGroupContent>
             <SidebarMenu>
               {presentations.map((presentation, index) => (
@@ -384,6 +455,53 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               )}
             </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <div className="flex items-center justify-between">
+            <SidebarGroupLabel>Slide Decks</SidebarGroupLabel>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCreateSlideDeck}
+              className="h-6 w-6 p-0"
+            >
+              <Plus className="h-3 w-3" />
+            </Button>
+          </div>
+          <SidebarGroupContent>
+            <div className="relative mb-2">
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-sidebar-foreground/50" />
+              <Input
+                placeholder="Search slide decks..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-7 h-7 text-xs"
+              />
+            </div>
+            <div className="space-y-1 max-h-64 overflow-y-auto">
+              {filteredSlideDecks.map((deck) => (
+                <DraggableSlideDeck
+                  key={deck.id}
+                  deck={deck}
+                  isSelected={currentSlideDeckId === deck.id}
+                  onSelect={() => setCurrentSlideDeck(deck.id)}
+                  onDelete={() => deleteSlideDeck(deck.id)}
+                  onRename={(newTitle) => updateSlideDeck(deck.id, { title: newTitle })}
+                />
+              ))}
+              {filteredSlideDecks.length === 0 && slideDecks.length > 0 && (
+                <div className="text-xs text-sidebar-foreground/60 p-2 text-center">
+                  No matching slide decks
+                </div>
+              )}
+              {slideDecks.length === 0 && (
+                <div className="text-xs text-sidebar-foreground/60 p-2 text-center">
+                  No slide decks yet. Click + to create one.
+                </div>
+              )}
+            </div>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

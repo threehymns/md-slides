@@ -12,27 +12,37 @@ export interface SlideDeck {
 export interface Presentation {
   id: string;
   title: string;
-  slideDecks: SlideDeck[];
+  slideDeckIds: string[]; // References to slide deck IDs instead of embedded decks
   createdAt: Date;
   updatedAt: Date;
 }
 
 interface PresentationsContextType {
   presentations: Presentation[];
+  slideDecks: SlideDeck[];
   currentPresentationId: string | null;
   currentSlideDeckId: string | null;
+  
+  // Presentation methods
   createPresentation: (title: string) => Presentation;
   updatePresentation: (id: string, updates: Partial<Omit<Presentation, 'id' | 'createdAt'>>) => void;
   deletePresentation: (id: string) => void;
   setCurrentPresentation: (id: string | null) => void;
   getCurrentPresentation: () => Presentation | null;
   reorderPresentations: (fromIndex: number, toIndex: number) => void;
-  createSlideDeck: (presentationId: string, title: string, content?: string) => SlideDeck;
-  updateSlideDeck: (presentationId: string, deckId: string, updates: Partial<Omit<SlideDeck, 'id' | 'createdAt'>>) => void;
-  deleteSlideDeck: (presentationId: string, deckId: string) => void;
+  
+  // Slide deck methods
+  createSlideDeck: (title: string, content?: string) => SlideDeck;
+  updateSlideDeck: (deckId: string, updates: Partial<Omit<SlideDeck, 'id' | 'createdAt'>>) => void;
+  deleteSlideDeck: (deckId: string) => void;
   setCurrentSlideDeck: (deckId: string | null) => void;
   getCurrentSlideDeck: () => SlideDeck | null;
-  reorderSlideDecks: (presentationId: string, fromIndex: number, toIndex: number) => void;
+  
+  // Presentation-SlideDeck relationship methods
+  addSlideDeckToPresentation: (presentationId: string, slideDeckId: string) => void;
+  removeSlideDeckFromPresentation: (presentationId: string, slideDeckId: string) => void;
+  reorderSlideDecksInPresentation: (presentationId: string, fromIndex: number, toIndex: number) => void;
+  getPresentationSlideDecks: (presentationId: string) => SlideDeck[];
 }
 
 const PresentationsContext = createContext<PresentationsContextType | undefined>(undefined);
@@ -47,12 +57,14 @@ export const usePresentations = () => {
 
 export const PresentationsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [presentations, setPresentations] = useState<Presentation[]>([]);
+  const [slideDecks, setSlideDecks] = useState<SlideDeck[]>([]);
   const [currentPresentationId, setCurrentPresentationId] = useState<string | null>(null);
   const [currentSlideDeckId, setCurrentSlideDeckId] = useState<string | null>(null);
 
   // Load data from localStorage on mount
   useEffect(() => {
     const savedPresentations = localStorage.getItem('presentations');
+    const savedSlideDecks = localStorage.getItem('slideDecks');
     const savedCurrentPresentationId = localStorage.getItem('currentPresentationId');
     const savedCurrentSlideDeckId = localStorage.getItem('currentSlideDeckId');
     
@@ -60,14 +72,18 @@ export const PresentationsProvider: React.FC<{ children: React.ReactNode }> = ({
       const parsedPresentations = JSON.parse(savedPresentations).map((presentation: any) => ({
         ...presentation,
         createdAt: new Date(presentation.createdAt),
-        updatedAt: new Date(presentation.updatedAt),
-        slideDecks: presentation.slideDecks.map((deck: any) => ({
-          ...deck,
-          createdAt: new Date(deck.createdAt),
-          updatedAt: new Date(deck.updatedAt)
-        }))
+        updatedAt: new Date(presentation.updatedAt)
       }));
       setPresentations(parsedPresentations);
+    }
+    
+    if (savedSlideDecks) {
+      const parsedSlideDecks = JSON.parse(savedSlideDecks).map((deck: any) => ({
+        ...deck,
+        createdAt: new Date(deck.createdAt),
+        updatedAt: new Date(deck.updatedAt)
+      }));
+      setSlideDecks(parsedSlideDecks);
     }
     
     if (savedCurrentPresentationId) {
@@ -79,12 +95,15 @@ export const PresentationsProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
-  // Save presentations to localStorage whenever they change
+  // Save data to localStorage
   useEffect(() => {
     localStorage.setItem('presentations', JSON.stringify(presentations));
   }, [presentations]);
 
-  // Save current IDs to localStorage
+  useEffect(() => {
+    localStorage.setItem('slideDecks', JSON.stringify(slideDecks));
+  }, [slideDecks]);
+
   useEffect(() => {
     if (currentPresentationId) {
       localStorage.setItem('currentPresentationId', currentPresentationId);
@@ -101,11 +120,12 @@ export const PresentationsProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [currentSlideDeckId]);
 
+  // Presentation methods
   const createPresentation = (title: string) => {
     const newPresentation: Presentation = {
       id: Date.now().toString(),
       title,
-      slideDecks: [],
+      slideDeckIds: [],
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -133,7 +153,7 @@ export const PresentationsProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const setCurrentPresentation = (id: string | null) => {
     setCurrentPresentationId(id);
-    setCurrentSlideDeckId(null); // Reset slide deck when changing presentation
+    setCurrentSlideDeckId(null);
   };
 
   const getCurrentPresentation = () => {
@@ -149,7 +169,8 @@ export const PresentationsProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   };
 
-  const createSlideDeck = (presentationId: string, title: string, content: string = '') => {
+  // Slide deck methods
+  const createSlideDeck = (title: string, content: string = '') => {
     const newDeck: SlideDeck = {
       id: Date.now().toString(),
       title,
@@ -158,46 +179,29 @@ export const PresentationsProvider: React.FC<{ children: React.ReactNode }> = ({
       updatedAt: new Date()
     };
     
-    setPresentations(prev => prev.map(presentation => 
-      presentation.id === presentationId
-        ? { 
-            ...presentation, 
-            slideDecks: [...presentation.slideDecks, newDeck],
-            updatedAt: new Date()
-          }
-        : presentation
-    ));
-    
+    setSlideDecks(prev => [...prev, newDeck]);
     setCurrentSlideDeckId(newDeck.id);
     return newDeck;
   };
 
-  const updateSlideDeck = (presentationId: string, deckId: string, updates: Partial<Omit<SlideDeck, 'id' | 'createdAt'>>) => {
-    setPresentations(prev => prev.map(presentation => 
-      presentation.id === presentationId
-        ? {
-            ...presentation,
-            slideDecks: presentation.slideDecks.map(deck =>
-              deck.id === deckId
-                ? { ...deck, ...updates, updatedAt: new Date() }
-                : deck
-            ),
-            updatedAt: new Date()
-          }
-        : presentation
+  const updateSlideDeck = (deckId: string, updates: Partial<Omit<SlideDeck, 'id' | 'createdAt'>>) => {
+    setSlideDecks(prev => prev.map(deck =>
+      deck.id === deckId
+        ? { ...deck, ...updates, updatedAt: new Date() }
+        : deck
     ));
   };
 
-  const deleteSlideDeck = (presentationId: string, deckId: string) => {
-    setPresentations(prev => prev.map(presentation => 
-      presentation.id === presentationId
-        ? {
-            ...presentation,
-            slideDecks: presentation.slideDecks.filter(deck => deck.id !== deckId),
-            updatedAt: new Date()
-          }
-        : presentation
-    ));
+  const deleteSlideDeck = (deckId: string) => {
+    // Remove from all presentations first
+    setPresentations(prev => prev.map(presentation => ({
+      ...presentation,
+      slideDeckIds: presentation.slideDeckIds.filter(id => id !== deckId),
+      updatedAt: new Date()
+    })));
+    
+    // Then remove the slide deck
+    setSlideDecks(prev => prev.filter(deck => deck.id !== deckId));
     
     if (currentSlideDeckId === deckId) {
       setCurrentSlideDeckId(null);
@@ -209,19 +213,42 @@ export const PresentationsProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const getCurrentSlideDeck = () => {
-    const currentPresentation = getCurrentPresentation();
-    if (!currentPresentation || !currentSlideDeckId) return null;
-    
-    return currentPresentation.slideDecks.find(deck => deck.id === currentSlideDeckId) || null;
+    if (!currentSlideDeckId) return null;
+    return slideDecks.find(deck => deck.id === currentSlideDeckId) || null;
   };
 
-  const reorderSlideDecks = (presentationId: string, fromIndex: number, toIndex: number) => {
-    setPresentations(prev => prev.map(presentation => 
+  // Presentation-SlideDeck relationship methods
+  const addSlideDeckToPresentation = (presentationId: string, slideDeckId: string) => {
+    setPresentations(prev => prev.map(presentation =>
       presentation.id === presentationId
         ? {
             ...presentation,
-            slideDecks: (() => {
-              const result = [...presentation.slideDecks];
+            slideDeckIds: [...presentation.slideDeckIds, slideDeckId],
+            updatedAt: new Date()
+          }
+        : presentation
+    ));
+  };
+
+  const removeSlideDeckFromPresentation = (presentationId: string, slideDeckId: string) => {
+    setPresentations(prev => prev.map(presentation =>
+      presentation.id === presentationId
+        ? {
+            ...presentation,
+            slideDeckIds: presentation.slideDeckIds.filter(id => id !== slideDeckId),
+            updatedAt: new Date()
+          }
+        : presentation
+    ));
+  };
+
+  const reorderSlideDecksInPresentation = (presentationId: string, fromIndex: number, toIndex: number) => {
+    setPresentations(prev => prev.map(presentation =>
+      presentation.id === presentationId
+        ? {
+            ...presentation,
+            slideDeckIds: (() => {
+              const result = [...presentation.slideDeckIds];
               const [removed] = result.splice(fromIndex, 1);
               result.splice(toIndex, 0, removed);
               return result;
@@ -232,9 +259,19 @@ export const PresentationsProvider: React.FC<{ children: React.ReactNode }> = ({
     ));
   };
 
+  const getPresentationSlideDecks = (presentationId: string) => {
+    const presentation = presentations.find(p => p.id === presentationId);
+    if (!presentation) return [];
+    
+    return presentation.slideDeckIds
+      .map(id => slideDecks.find(deck => deck.id === id))
+      .filter(Boolean) as SlideDeck[];
+  };
+
   return (
     <PresentationsContext.Provider value={{
       presentations,
+      slideDecks,
       currentPresentationId,
       currentSlideDeckId,
       createPresentation,
@@ -248,7 +285,10 @@ export const PresentationsProvider: React.FC<{ children: React.ReactNode }> = ({
       deleteSlideDeck,
       setCurrentSlideDeck,
       getCurrentSlideDeck,
-      reorderSlideDecks
+      addSlideDeckToPresentation,
+      removeSlideDeckFromPresentation,
+      reorderSlideDecksInPresentation,
+      getPresentationSlideDecks
     }}>
       {children}
     </PresentationsContext.Provider>

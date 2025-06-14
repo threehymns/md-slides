@@ -2,11 +2,9 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Moon, Sun, Settings as SettingsIcon } from 'lucide-react';
+import { Settings as SettingsIcon } from 'lucide-react';
 import Settings from './Settings';
 import { usePresentations } from '@/contexts/PresentationsContext';
-import { useTheme } from '@/components/ThemeProvider';
 
 interface MarkdownEditorProps {
   markdown: string;
@@ -20,7 +18,6 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   onStartPresentation
 }) => {
   const { getCurrentSlideDeck } = usePresentations();
-  const { theme, setTheme } = useTheme();
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState({
     showProgressBar: false,
@@ -30,11 +27,6 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   });
 
   const currentDeck = getCurrentSlideDeck();
-  const isDark = theme === 'dark';
-
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
 
   const sampleMarkdown = `# Welcome to Markdown Slideshow
 
@@ -102,14 +94,6 @@ Separate slides with \`---\``;
               <p className="mt-1 text-muted-foreground">Create beautiful presentations from markdown</p>
             </div>
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Sun className="h-4 w-4 text-muted-foreground" />
-                <Switch
-                  checked={isDark}
-                  onCheckedChange={toggleTheme}
-                />
-                <Moon className="h-4 w-4 text-muted-foreground" />
-              </div>
               <Button 
                 variant="outline"
                 size="sm"
