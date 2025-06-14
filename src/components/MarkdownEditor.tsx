@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Moon, Sun, Settings as SettingsIcon } from 'lucide-react';
 import Settings from './Settings';
+import { useSlideDecks } from '@/contexts/SlideDecksContext';
 
 interface MarkdownEditorProps {
   markdown: string;
@@ -21,6 +21,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   isDarkMode,
   onDarkModeToggle
 }) => {
+  const { getCurrentDeck } = useSlideDecks();
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState({
     showProgressBar: false,
@@ -28,6 +29,8 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     showNavigationHint: true,
     autoHideControls: false
   });
+
+  const currentDeck = getCurrentDeck();
 
   const sampleMarkdown = `# Welcome to Markdown Slideshow
 
@@ -81,7 +84,7 @@ hello('World');
 
 Click "Start Presentation" or replace this content with your own markdown!
 
-Separate slides with \`---\``;
+Separate slides with \`---``;
 
   return (
     <div className={`min-h-screen p-4 ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
@@ -89,7 +92,9 @@ Separate slides with \`---\``;
         <div className={`rounded-lg shadow-sm border p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Markdown Slideshow</h1>
+              <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                {currentDeck?.title || 'Markdown Slideshow'}
+              </h1>
               <p className={`mt-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Create beautiful presentations from markdown</p>
             </div>
             <div className="flex items-center gap-4">
