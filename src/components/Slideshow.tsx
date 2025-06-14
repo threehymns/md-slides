@@ -4,9 +4,11 @@ import { marked } from 'marked';
 
 interface SlideshowProps {
   markdown: string;
+  isDarkMode: boolean;
+  onDarkModeToggle: () => void;
 }
 
-const Slideshow: React.FC<SlideshowProps> = ({ markdown }) => {
+const Slideshow: React.FC<SlideshowProps> = ({ markdown, isDarkMode, onDarkModeToggle }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   // Parse markdown and split into slides
@@ -38,41 +40,47 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown }) => {
           event.preventDefault();
           setCurrentSlide(slides.length - 1);
           break;
+        case 'd':
+        case 'D':
+          event.preventDefault();
+          onDarkModeToggle();
+          break;
       }
     };
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [slides.length]);
+  }, [slides.length, onDarkModeToggle]);
 
   if (slides.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center text-gray-500">
-          <h2 className="text-2xl font-semibold mb-2">No slides found</h2>
-          <p>Add some markdown content separated by "---" to create slides</p>
+      <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        <div className="text-center">
+          <h2 className={`text-2xl font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-500'}`}>No slides found</h2>
+          <p className={isDarkMode ? 'text-gray-300' : 'text-gray-500'}>Add some markdown content separated by "---" to create slides</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col relative">
+    <div className={`min-h-screen flex flex-col relative ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white text-black'}`}>
       {/* Slide Content */}
       <div className="flex-1 flex items-center justify-center p-8 md:p-16">
         <div 
-          className="prose prose-lg md:prose-xl lg:prose-2xl max-w-none w-full h-full flex flex-col justify-center"
+          className="prose max-w-none w-full h-full flex flex-col justify-center text-center"
+          style={{ fontSize: '12vh', lineHeight: '1.2' }}
           dangerouslySetInnerHTML={{ __html: slides[currentSlide] }}
         />
       </div>
 
       {/* Slide Counter */}
-      <div className="absolute bottom-4 right-4 text-sm text-gray-400 font-mono">
+      <div className={`absolute bottom-4 right-4 text-sm font-mono ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`}>
         {currentSlide + 1} / {slides.length}
       </div>
 
       {/* Progress Bar */}
-      <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100">
+      <div className={`absolute bottom-0 left-0 w-full h-1 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
         <div 
           className="h-full bg-blue-500 transition-all duration-300 ease-out"
           style={{ width: `${((currentSlide + 1) / slides.length) * 100}%` }}
@@ -81,8 +89,8 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown }) => {
 
       {/* Navigation Hint */}
       {currentSlide === 0 && slides.length > 1 && (
-        <div className="absolute bottom-4 left-4 text-xs text-gray-400">
-          Use arrow keys or spacebar to navigate
+        <div className={`absolute bottom-4 left-4 text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`}>
+          Use arrow keys, spacebar to navigate • Press 'd' for dark mode
         </div>
       )}
     </div>

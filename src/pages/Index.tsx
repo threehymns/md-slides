@@ -6,6 +6,7 @@ import Slideshow from '@/components/Slideshow';
 const Index = () => {
   const [markdown, setMarkdown] = useState('');
   const [isPresenting, setIsPresenting] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const handleStartPresentation = () => {
     if (markdown.trim()) {
@@ -15,6 +16,10 @@ const Index = () => {
 
   const handleExitPresentation = () => {
     setIsPresenting(false);
+  };
+
+  const handleDarkModeToggle = () => {
+    setIsDarkMode(!isDarkMode);
   };
 
   // Handle escape key to exit presentation
@@ -30,7 +35,7 @@ const Index = () => {
   }, [isPresenting]);
 
   if (isPresenting) {
-    return <Slideshow markdown={markdown} />;
+    return <Slideshow markdown={markdown} isDarkMode={isDarkMode} onDarkModeToggle={handleDarkModeToggle} />;
   }
 
   return (
@@ -38,6 +43,8 @@ const Index = () => {
       markdown={markdown}
       onMarkdownChange={setMarkdown}
       onStartPresentation={handleStartPresentation}
+      isDarkMode={isDarkMode}
+      onDarkModeToggle={handleDarkModeToggle}
     />
   );
 };

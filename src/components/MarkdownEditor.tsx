@@ -2,17 +2,23 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Moon, Sun } from 'lucide-react';
 
 interface MarkdownEditorProps {
   markdown: string;
   onMarkdownChange: (markdown: string) => void;
   onStartPresentation: () => void;
+  isDarkMode: boolean;
+  onDarkModeToggle: () => void;
 }
 
 const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   markdown,
   onMarkdownChange,
-  onStartPresentation
+  onStartPresentation,
+  isDarkMode,
+  onDarkModeToggle
 }) => {
   const sampleMarkdown = `# Welcome to Markdown Slideshow
 
@@ -69,26 +75,36 @@ Click "Start Presentation" or replace this content with your own markdown!
 Separate slides with \`---\``;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className={`min-h-screen p-4 ${isDarkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
       <div className="max-w-6xl mx-auto">
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className={`rounded-lg shadow-sm border p-6 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Markdown Slideshow</h1>
-              <p className="text-gray-600 mt-1">Create beautiful presentations from markdown</p>
+              <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Markdown Slideshow</h1>
+              <p className={`mt-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Create beautiful presentations from markdown</p>
             </div>
-            <Button 
-              onClick={onStartPresentation}
-              disabled={!markdown.trim()}
-              size="lg"
-            >
-              Start Presentation
-            </Button>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Sun className="h-4 w-4" />
+                <Switch
+                  checked={isDarkMode}
+                  onCheckedChange={onDarkModeToggle}
+                />
+                <Moon className="h-4 w-4" />
+              </div>
+              <Button 
+                onClick={onStartPresentation}
+                disabled={!markdown.trim()}
+                size="lg"
+              >
+                Start Presentation
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <label htmlFor="markdown-input" className="text-sm font-medium text-gray-700">
+              <label htmlFor="markdown-input" className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
                 Markdown Content
               </label>
               <Button 
@@ -105,10 +121,10 @@ Separate slides with \`---\``;
               value={markdown}
               onChange={(e) => onMarkdownChange(e.target.value)}
               placeholder="Enter your markdown here... Use --- to separate slides"
-              className="min-h-[500px] font-mono text-sm"
+              className={`min-h-[500px] font-mono text-sm ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : ''}`}
             />
             
-            <div className="text-xs text-gray-500">
+            <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
               <strong>Tip:</strong> Use <code>---</code> to separate slides. Supports all standard markdown formatting.
             </div>
           </div>
