@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Settings as SettingsIcon } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Settings as SettingsIcon, Play } from 'lucide-react';
 import { AppSidebar } from '@/components/AppSidebar';
 import MarkdownEditor from '@/components/MarkdownEditor';
 import Slideshow from '@/components/Slideshow';
@@ -10,7 +11,14 @@ import Settings from '@/components/Settings';
 import { usePresentations } from '@/contexts/PresentationsContext';
 
 const Index = () => {
-  const { getCurrentSlideDeck, updateSlideDeck, currentSlideDeckId, getCurrentPresentation, getPresentationSlideDecks } = usePresentations();
+  const { 
+    getCurrentSlideDeck, 
+    updateSlideDeck, 
+    currentSlideDeckId, 
+    getCurrentPresentation, 
+    getPresentationSlideDecks,
+    updatePresentation 
+  } = usePresentations();
   const [isPresenting, setIsPresenting] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState({
@@ -52,6 +60,16 @@ const Index = () => {
     setIsPresenting(false);
   };
 
+  const handlePresentationTitleChange = (newTitle: string) => {
+    if (currentPresentation) {
+      updatePresentation(currentPresentation.id, { title: newTitle });
+    }
+  };
+
+  // Check if presentation has content to present
+  const presentationSlideDecks = currentPresentation ? getPresentationSlideDecks(currentPresentation.id) : [];
+  const canStartPresentation = presentationSlideDecks.some(deck => deck.content.trim());
+
   // Handle escape key to exit presentation
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
@@ -74,6 +92,28 @@ const Index = () => {
       <div className="flex-1 flex flex-col">
         <div className="p-2 border-b flex items-center gap-2">
           <SidebarTrigger />
+          
+          {currentPresentation && (
+            <div className="flex items-center gap-2 flex-1">
+              <Input
+                value={currentPresentation.title}
+                onChange={(e) => handlePresentationTitleChange(e.target.value)}
+                className="border-none shadow-none px-2 text-lg font-semibold bg-transparent focus-visible:ring-1 focus-visible:ring-offset-0"
+                placeholder="Presentation title..."
+              />
+              
+              <Button 
+                onClick={handleStartPresentation}
+                disabled={!canStartPresentation}
+                size="sm"
+                className="ml-auto"
+              >
+                <Play className="h-4 w-4 mr-1" />
+                Start Presentation
+              </Button>
+            </div>
+          )}
+          
           <Button 
             variant="outline"
             size="sm"
@@ -87,7 +127,6 @@ const Index = () => {
             <MarkdownEditor
               markdown={markdown}
               onMarkdownChange={handleMarkdownChange}
-              onStartPresentation={handleStartPresentation}
             />
           ) : (
             <div className="min-h-screen flex items-center justify-center bg-background">

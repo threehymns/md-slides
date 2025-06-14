@@ -7,22 +7,17 @@ import { usePresentations } from '@/contexts/PresentationsContext';
 interface MarkdownEditorProps {
   markdown: string;
   onMarkdownChange: (markdown: string) => void;
-  onStartPresentation: () => void;
 }
 
 const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   markdown,
-  onMarkdownChange,
-  onStartPresentation
+  onMarkdownChange
 }) => {
   const { getCurrentSlideDeck, getCurrentPresentation, getPresentationSlideDecks } = usePresentations();
 
   const currentDeck = getCurrentSlideDeck();
   const currentPresentation = getCurrentPresentation();
   const presentationSlideDecks = currentPresentation ? getPresentationSlideDecks(currentPresentation.id) : [];
-  
-  // Check if presentation has content to present
-  const canStartPresentation = presentationSlideDecks.some(deck => deck.content.trim());
 
   const sampleMarkdown = `# Welcome to Markdown Slideshow
 
@@ -84,10 +79,7 @@ Separate slides with \`---\``;
         <div className="rounded-lg shadow-sm border p-6 bg-card">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">
-                {currentPresentation?.title || 'Markdown Slideshow'}
-              </h1>
-              <p className="mt-1 text-muted-foreground">
+              <p className="text-muted-foreground">
                 {currentDeck ? `Editing: ${currentDeck.title}` : 'Create beautiful presentations from markdown'}
               </p>
               {currentPresentation && (
@@ -95,15 +87,6 @@ Separate slides with \`---\``;
                   Presentation contains {presentationSlideDecks.length} slide deck{presentationSlideDecks.length !== 1 ? 's' : ''}
                 </p>
               )}
-            </div>
-            <div className="flex items-center gap-4">
-              <Button 
-                onClick={onStartPresentation}
-                disabled={!canStartPresentation}
-                size="lg"
-              >
-                Start Presentation
-              </Button>
             </div>
           </div>
 
