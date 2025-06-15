@@ -3,12 +3,14 @@ export interface SlideDeck {
   id: string;
   title: string;
   content: string;
+  createdAt: number;
 }
 
 export interface Presentation {
   id: string;
   title: string;
   slideDeckIds: string[];
+  createdAt: number;
 }
 
 export interface AppSettings {

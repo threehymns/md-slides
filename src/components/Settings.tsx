@@ -1,26 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { X, Palette, Compass, Keyboard, SettingsIcon, Layout, AlignLeft, AlignCenter, AlignRight, AlignJustify } from 'lucide-react';
+import { X, SettingsIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { AppSettings } from '@/types';
+import { CATEGORIES } from './settings/constants';
+import SettingsSidebar from './settings/SettingsSidebar';
+import AppearanceSettings from './settings/AppearanceSettings';
+import StyleSettings from './settings/StyleSettings';
+import NavigationSettings from './settings/NavigationSettings';
+import KeyboardSettings from './settings/KeyboardSettings';
 
-// Define categories for settings with icons
-const CATEGORIES = [
-  { id: 'appearance', name: 'Appearance', icon: Layout },
-  { id: 'style', name: 'Style', icon: Palette },
-  { id: 'navigation', name: 'Navigation', icon: Compass },
-  { id: 'keyboard', name: 'Keyboard', icon: Keyboard },
-];
+interface SettingsProps {
+  isOpen: boolean;
+  onClose: () => void;
+  settings: AppSettings;
+  onSettingsChange: (settings: AppSettings) => void;
+}
 
 const Settings: React.FC<SettingsProps> = ({
   isOpen,
@@ -69,152 +63,13 @@ const Settings: React.FC<SettingsProps> = ({
   const renderSettings = () => {
     switch (selectedCategory) {
       case 'appearance':
-        return (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="progress-bar" className="text-sm font-medium">
-                Show Progress Bar
-              </Label>
-              <Switch
-                id="progress-bar"
-                checked={settings.showProgressBar}
-                onCheckedChange={(checked) => handleSettingChange('showProgressBar', checked)}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <Label htmlFor="slide-counter" className="text-sm font-medium">
-                Show Slide Counter
-              </Label>
-              <Switch
-                id="slide-counter"
-                checked={settings.showSlideCounter}
-                onCheckedChange={(checked) => handleSettingChange('showSlideCounter', checked)}
-              />
-            </div>
-          </div>
-        );
-      
+        return <AppearanceSettings settings={settings} onSettingChange={handleSettingChange} />;
       case 'style':
-        return (
-          <div className="space-y-8">
-            <div>
-              <Label htmlFor="font-family" className="text-sm font-medium mb-2 block">
-                Font Family
-              </Label>
-              <Select
-                value={settings.style.fontFamily}
-                onValueChange={(value) => handleStyleChange('fontFamily', value)}
-              >
-                <SelectTrigger id="font-family">
-                  <SelectValue placeholder="Select a font" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="system-ui, sans-serif">System UI</SelectItem>
-                  <SelectItem value="serif">Serif</SelectItem>
-                  <SelectItem value="monospace">Monospace</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="font-size" className="text-sm font-medium mb-2 block">
-                Font Size ({settings.style.fontSize.toFixed(1)}vw)
-              </Label>
-              <Slider
-                id="font-size"
-                min={1}
-                max={10}
-                step={0.1}
-                value={[settings.style.fontSize]}
-                onValueChange={([value]) => handleStyleChange('fontSize', value)}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="line-height" className="text-sm font-medium mb-2 block">
-                Line Height ({settings.style.lineHeight.toFixed(1)})
-              </Label>
-              <Slider
-                id="line-height"
-                min={1}
-                max={3}
-                step={0.1}
-                value={[settings.style.lineHeight]}
-                onValueChange={([value]) => handleStyleChange('lineHeight', value)}
-              />
-            </div>
-
-            <div>
-              <Label className="text-sm font-medium mb-2 block">
-                Text Alignment
-              </Label>
-              <ToggleGroup
-                type="single"
-                value={settings.style.textAlign}
-                onValueChange={(value) => value && handleStyleChange('textAlign', value)}
-                className="justify-start"
-              >
-                <ToggleGroupItem value="left" aria-label="Align left">
-                  <AlignLeft className="h-4 w-4" />
-                </ToggleGroupItem>
-                <ToggleGroupItem value="center" aria-label="Align center">
-                  <AlignCenter className="h-4 w-4" />
-                </ToggleGroupItem>
-                <ToggleGroupItem value="right" aria-label="Align right">
-                  <AlignRight className="h-4 w-4" />
-                </ToggleGroupItem>
-                <ToggleGroupItem value="justify" aria-label="Align justify">
-                  <AlignJustify className="h-4 w-4" />
-                </ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-          </div>
-        );
-      
+        return <StyleSettings settings={settings} onStyleChange={handleStyleChange} />;
       case 'navigation':
-        return (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="navigation-hint" className="text-sm font-medium">
-                Show Navigation Hint
-              </Label>
-              <Switch
-                id="navigation-hint"
-                checked={settings.showNavigationHint}
-                onCheckedChange={(checked) => handleSettingChange('showNavigationHint', checked)}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <Label htmlFor="auto-hide" className="text-sm font-medium">
-                Auto-hide Controls
-              </Label>
-              <Switch
-                id="auto-hide"
-                checked={settings.autoHideControls}
-                onCheckedChange={(checked) => handleSettingChange('autoHideControls', checked)}
-              />
-            </div>
-          </div>
-        );
-      
+        return <NavigationSettings settings={settings} onSettingChange={handleSettingChange} />;
       case 'keyboard':
-        return (
-          <div className="space-y-4">
-            <div className="text-sm">
-              <p className="mb-2"><strong>Keyboard shortcuts:</strong></p>
-              <ul className="space-y-1">
-                <li>→ / Space: Next slide</li>
-                <li>←: Previous slide</li>
-                <li>D: Toggle dark mode</li>
-                <li>S: Toggle settings</li>
-                <li>Esc: Exit presentation</li>
-              </ul>
-            </div>
-          </div>
-        );
-      
+        return <KeyboardSettings />;
       default:
         return null;
     }
@@ -239,28 +94,7 @@ const Settings: React.FC<SettingsProps> = ({
         </div>
         
         <div className="flex flex-1">
-          {/* Sidebar with categories */}
-          <div className="w-1/4 border-t border-border bg-muted/50 rounded-xl m-3 mt-0">
-            <div className="p-4 space-y-1">
-              {CATEGORIES.map(category => {
-                const Icon = category.icon;
-                return (
-                  <button
-                    key={category.id}
-                    className={`w-full text-sm flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${
-                      selectedCategory === category.id 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'hover:bg-accent'
-                    }`}
-                    onClick={() => setSelectedCategory(category.id)}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span>{category.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <SettingsSidebar selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
           
           {/* Main content area */}
           <div className="flex-1 p-6 overflow-auto">
