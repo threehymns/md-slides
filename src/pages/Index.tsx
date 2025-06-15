@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import Slideshow from '@/components/Slideshow';
 import Settings from '@/components/Settings';
 import { usePresentations } from '@/contexts/PresentationsContext';
 import PresentationManager from '@/components/PresentationManager';
+import { AppSettings } from '@/types';
 
 const Index = () => {
   const { 
@@ -20,11 +22,17 @@ const Index = () => {
   } = usePresentations();
   const [isPresenting, setIsPresenting] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useState<AppSettings>({
     showProgressBar: false,
     showSlideCounter: true,
     showNavigationHint: true,
-    autoHideControls: false
+    autoHideControls: false,
+    style: {
+      fontFamily: 'system-ui, sans-serif',
+      fontSize: 5,
+      lineHeight: 1.6,
+      textAlign: 'center',
+    },
   });
 
   const currentDeck = getCurrentSlideDeck();
@@ -82,7 +90,7 @@ const Index = () => {
   }, [isPresenting]);
 
   if (isPresenting) {
-    return <Slideshow markdown={getPresentationMarkdown()} />;
+    return <Slideshow markdown={getPresentationMarkdown()} settings={settings} onSettingsChange={setSettings} />;
   }
 
   return (

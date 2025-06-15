@@ -1,28 +1,18 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { marked } from 'marked';
 import Settings from './Settings';
 import { useTheme } from '@/components/ThemeProvider';
+import { AppSettings } from '@/types';
 
 interface SlideshowProps {
   markdown: string;
+  settings: AppSettings;
+  onSettingsChange: (settings: AppSettings) => void;
 }
 
-const Slideshow: React.FC<SlideshowProps> = ({ markdown }) => {
+const Slideshow: React.FC<SlideshowProps> = ({ markdown, settings, onSettingsChange }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
-  const [settings, setSettings] = useState({
-    showProgressBar: false,
-    showSlideCounter: true,
-    showNavigationHint: true,
-    autoHideControls: false,
-    style: {
-      fontFamily: 'system-ui, sans-serif',
-      fontSize: 5,
-      lineHeight: 1.6,
-      textAlign: 'center' as 'left' | 'center' | 'right' | 'justify',
-    },
-  });
   const { theme, setTheme } = useTheme();
 
   const toggleTheme = () => {
@@ -83,7 +73,9 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown }) => {
           break;
         case 'Escape':
           event.preventDefault();
-          if (!showSettings) {
+          if (showSettings) {
+            setShowSettings(false)
+          } else {
             window.history.back();
           }
           break;
@@ -156,7 +148,7 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown }) => {
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
         settings={settings}
-        onSettingsChange={setSettings}
+        onSettingsChange={onSettingsChange}
       />
     </div>
   );

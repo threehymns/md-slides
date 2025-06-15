@@ -12,25 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-
-
-interface SettingsProps {
-  isOpen: boolean;
-  onClose: () => void;
-  settings: {
-    showProgressBar: boolean;
-    showSlideCounter: boolean;
-    showNavigationHint: boolean;
-    autoHideControls: boolean;
-    style: {
-      fontFamily: string;
-      fontSize: number;
-      lineHeight: number;
-      textAlign: 'left' | 'center' | 'right' | 'justify';
-    };
-  };
-  onSettingsChange: (settings: any) => void;
-}
+import { AppSettings } from '@/types';
 
 // Define categories for settings with icons
 const CATEGORIES = [
