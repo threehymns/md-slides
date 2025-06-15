@@ -1,5 +1,5 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { SlideDeck, Presentation } from '@/types'; // Using a shared types file would be a good refactor
 
 export interface SlideDeck {
   id: string;
@@ -29,7 +29,7 @@ interface PresentationsContextType {
   deletePresentation: (id: string) => void;
   setCurrentPresentation: (id: string | null) => void;
   getCurrentPresentation: () => Presentation | null;
-  reorderPresentations: (fromIndex: number, toIndex: number) => void;
+  reorderPresentations: (newOrder: Presentation[]) => void;
   
   // Slide deck methods
   createSlideDeck: (title: string, content?: string) => SlideDeck;
@@ -41,7 +41,7 @@ interface PresentationsContextType {
   // Presentation-SlideDeck relationship methods
   addSlideDeckToPresentation: (presentationId: string, slideDeckId: string) => void;
   removeSlideDeckFromPresentation: (presentationId: string, slideDeckId: string) => void;
-  reorderSlideDecksInPresentation: (presentationId: string, fromIndex: number, toIndex: number) => void;
+  reorderSlideDecksInPresentation: (presentationId: string, newDecks: SlideDeck[]) => void;
   getPresentationSlideDecks: (presentationId: string) => SlideDeck[];
 }
 
@@ -160,13 +160,8 @@ export const PresentationsProvider: React.FC<{ children: React.ReactNode }> = ({
     return presentations.find(presentation => presentation.id === currentPresentationId) || null;
   };
 
-  const reorderPresentations = (fromIndex: number, toIndex: number) => {
-    setPresentations(prev => {
-      const result = [...prev];
-      const [removed] = result.splice(fromIndex, 1);
-      result.splice(toIndex, 0, removed);
-      return result;
-    });
+  const reorderPresentations = (newOrder: Presentation[]) => {
+    setPresentations(newOrder);
   };
 
   // Slide deck methods
@@ -242,17 +237,12 @@ export const PresentationsProvider: React.FC<{ children: React.ReactNode }> = ({
     ));
   };
 
-  const reorderSlideDecksInPresentation = (presentationId: string, fromIndex: number, toIndex: number) => {
+  const reorderSlideDecksInPresentation = (presentationId: string, newDecks: SlideDeck[]) => {
     setPresentations(prev => prev.map(presentation =>
       presentation.id === presentationId
         ? {
             ...presentation,
-            slideDeckIds: (() => {
-              const result = [...presentation.slideDeckIds];
-              const [removed] = result.splice(fromIndex, 1);
-              result.splice(toIndex, 0, removed);
-              return result;
-            })(),
+            slideDeckIds: newDecks.map(deck => deck.id),
             updatedAt: new Date()
           }
         : presentation

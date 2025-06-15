@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, FileText, GripVertical, Trash2, Edit, FolderOpen, Presentation, Search, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import {
   Sidebar,
   SidebarContent,
@@ -19,12 +19,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 
 interface DraggablePresentationProps {
   presentation: any;
-  index: number;
-  isDragging: boolean;
-  onDragStart: (index: number) => void;
-  onDragEnd: () => void;
-  onDragOver: (e: React.DragEvent, index: number) => void;
-  onDrop: (e: React.DragEvent, index: number) => void;
   isSelected: boolean;
   onSelect: () => void;
   onDelete: () => void;
@@ -33,13 +27,7 @@ interface DraggablePresentationProps {
 
 interface DraggableSlideDeckInPresentationProps {
   deck: any;
-  index: number;
   presentationId: string;
-  isDragging: boolean;
-  onDragStart: (index: number) => void;
-  onDragEnd: () => void;
-  onDragOver: (e: React.DragEvent, index: number) => void;
-  onDrop: (e: React.DragEvent, index: number) => void;
   isSelected: boolean;
   onSelect: () => void;
   onRemove: () => void;
@@ -55,19 +43,14 @@ interface DraggableSlideDeckProps {
 
 const DraggableSlideDeckInPresentation: React.FC<DraggableSlideDeckInPresentationProps> = ({
   deck,
-  index,
-  presentationId,
-  isDragging,
-  onDragStart,
-  onDragEnd,
-  onDragOver,
-  onDrop,
   isSelected,
   onSelect,
   onRemove
 }) => {
   return (
-    <motion.div
+    <Reorder.Item
+      value={deck}
+      as="div"
       layout
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
@@ -77,15 +60,10 @@ const DraggableSlideDeckInPresentation: React.FC<DraggableSlideDeckInPresentatio
       <div
         className={`group/item flex items-center gap-2 p-2 ml-4 rounded-md cursor-pointer transition-colors ${
           isSelected ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent/50'
-        } ${isDragging ? 'opacity-50' : ''}`}
-        draggable
-        onDragStart={() => onDragStart(index)}
-        onDragEnd={onDragEnd}
-        onDragOver={(e) => onDragOver(e, index)}
-        onDrop={(e) => onDrop(e, index)}
+        }`}
         onClick={onSelect}
       >
-        <GripVertical className="h-3 w-3 text-sidebar-foreground/10 group-hover/item:text-sidebar-foreground/50" />
+        <GripVertical className="h-3 w-3 text-sidebar-foreground/10 group-hover/item:text-sidebar-foreground/50 cursor-grab" />
         <FileText className="h-3 w-3 text-sidebar-foreground/70" />
         <div className="flex-1 min-w-0">
           <span className="text-xs truncate">{deck.title}</span>
@@ -102,7 +80,7 @@ const DraggableSlideDeckInPresentation: React.FC<DraggableSlideDeckInPresentatio
           <X className="h-2 w-2 opacity-0 group-hover/item:opacity-100" />
         </Button>
       </div>
-    </motion.div>
+    </Reorder.Item>
   );
 };
 
@@ -203,12 +181,6 @@ const DraggableSlideDeck: React.FC<DraggableSlideDeckProps> = ({
 
 const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
   presentation,
-  index,
-  isDragging,
-  onDragStart,
-  onDragEnd,
-  onDragOver,
-  onDrop,
   isSelected,
   onSelect,
   onDelete,
@@ -226,7 +198,6 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(presentation.title);
   const [isOpen, setIsOpen] = useState(isSelected);
-  const [draggedDeckIndex, setDraggedDeckIndex] = useState<number | null>(null);
 
   const presentationSlideDecks = getPresentationSlideDecks(presentation.id);
 
@@ -250,23 +221,8 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
     }
   };
 
-  const handleDeckDragStart = (index: number) => {
-    setDraggedDeckIndex(index);
-  };
-
-  const handleDeckDragEnd = () => {
-    setDraggedDeckIndex(null);
-  };
-
-  const handleDeckDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-  };
-
-  const handleDeckDrop = (e: React.DragEvent, dropIndex: number) => {
-    e.preventDefault();
-    if (draggedDeckIndex !== null && draggedDeckIndex !== dropIndex) {
-      reorderSlideDecksInPresentation(presentation.id, draggedDeckIndex, dropIndex);
-    }
+  const handleReorderDecks = (newDecks: any[]) => {
+    reorderSlideDecksInPresentation(presentation.id, newDecks);
   };
 
   const handlePresentationDragOver = (e: React.DragEvent) => {
@@ -275,6 +231,7 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
 
   const handlePresentationDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     try {
       const data = JSON.parse(e.dataTransfer.getData('application/json'));
       if (data.type === 'slideDeck' && data.deckId) {
@@ -286,7 +243,9 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
   };
 
   return (
-    <motion.li
+    <Reorder.Item
+      value={presentation}
+      as="li"
       layout
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -300,15 +259,10 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
         <div
           className={`group/item flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors ${
             isSelected ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent/50'
-          } ${isDragging ? 'opacity-50' : ''}`}
-          draggable
-          onDragStart={() => onDragStart(index)}
-          onDragEnd={onDragEnd}
-          onDragOver={(e) => onDragOver(e, index)}
-          onDrop={(e) => onDrop(e, index)}
+          }`}
           onClick={onSelect}
         >
-          <GripVertical className="h-4 w-4 text-sidebar-foreground/10 group-hover/item:text-sidebar-foreground/50" />
+          <GripVertical className="h-4 w-4 text-sidebar-foreground/10 group-hover/item:text-sidebar-foreground/50 cursor-grab" />
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm" className="h-4 w-4 p-0">
               <FolderOpen className="h-4 w-4 text-sidebar-foreground/70" />
@@ -359,24 +313,20 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
           onDragOver={handlePresentationDragOver}
           onDrop={handlePresentationDrop}
         >
-          <AnimatePresence>
-            {presentationSlideDecks.map((deck: any, deckIndex: number) => (
-              <DraggableSlideDeckInPresentation
-                key={deck.id}
-                deck={deck}
-                index={deckIndex}
-                presentationId={presentation.id}
-                isDragging={draggedDeckIndex === deckIndex}
-                onDragStart={handleDeckDragStart}
-                onDragEnd={handleDeckDragEnd}
-                onDragOver={handleDeckDragOver}
-                onDrop={handleDeckDrop}
-                isSelected={currentSlideDeckId === deck.id}
-                onSelect={() => setCurrentSlideDeck(deck.id)}
-                onRemove={() => removeSlideDeckFromPresentation(presentation.id, deck.id)}
-              />
-            ))}
-          </AnimatePresence>
+          <Reorder.Group axis="y" values={presentationSlideDecks} onReorder={handleReorderDecks}>
+            <AnimatePresence>
+              {presentationSlideDecks.map((deck: any) => (
+                <DraggableSlideDeckInPresentation
+                  key={deck.id}
+                  deck={deck}
+                  presentationId={presentation.id}
+                  isSelected={currentSlideDeckId === deck.id}
+                  onSelect={() => setCurrentSlideDeck(deck.id)}
+                  onRemove={() => removeSlideDeckFromPresentation(presentation.id, deck.id)}
+                />
+              ))}
+            </AnimatePresence>
+          </Reorder.Group>
           {presentationSlideDecks.length === 0 && (
             <div className="text-xs text-sidebar-foreground/60 p-2 ml-4 text-center">
               Drop slide decks here
@@ -384,7 +334,7 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
           )}
         </CollapsibleContent>
       </Collapsible>
-    </motion.li>
+    </Reorder.Item>
   );
 };
 
@@ -405,7 +355,6 @@ export function AppSidebar() {
     updateSlideDeck
   } = usePresentations();
   
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredSlideDecks = slideDecks.filter(deck => 
@@ -422,23 +371,8 @@ export function AppSidebar() {
     createSlideDeck(title);
   };
 
-  const handleDragStart = (index: number) => {
-    setDraggedIndex(index);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedIndex(null);
-  };
-
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
-    e.preventDefault();
-    if (draggedIndex !== null && draggedIndex !== dropIndex) {
-      reorderPresentations(draggedIndex, dropIndex);
-    }
+  const handleReorderPresentations = (newOrder: any[]) => {
+    reorderPresentations(newOrder);
   };
 
   const handleSlideDeckSelect = (deckId: string) => {
@@ -468,24 +402,20 @@ export function AppSidebar() {
           </div>
           <SidebarGroupContent>
             <SidebarMenu>
-              <AnimatePresence>
-                {presentations.map((presentation, index) => (
-                  <DraggablePresentation
-                    key={presentation.id}
-                    presentation={presentation}
-                    index={index}
-                    isDragging={draggedIndex === index}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                    isSelected={currentPresentationId === presentation.id}
-                    onSelect={() => setCurrentPresentation(presentation.id)}
-                    onDelete={() => deletePresentation(presentation.id)}
-                    onRename={(newTitle) => updatePresentation(presentation.id, { title: newTitle })}
-                  />
-                ))}
-              </AnimatePresence>
+              <Reorder.Group axis="y" values={presentations} onReorder={handleReorderPresentations}>
+                <AnimatePresence>
+                  {presentations.map((presentation) => (
+                    <DraggablePresentation
+                      key={presentation.id}
+                      presentation={presentation}
+                      isSelected={currentPresentationId === presentation.id}
+                      onSelect={() => setCurrentPresentation(presentation.id)}
+                      onDelete={() => deletePresentation(presentation.id)}
+                      onRename={(newTitle) => updatePresentation(presentation.id, { title: newTitle })}
+                    />
+                  ))}
+                </AnimatePresence>
+              </Reorder.Group>
               {presentations.length === 0 && (
                 <SidebarMenuItem>
                   <div className="text-sm text-sidebar-foreground/60 p-2 text-center">

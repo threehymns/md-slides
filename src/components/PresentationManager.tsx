@@ -12,6 +12,7 @@ export const PresentationManager = () => {
     updatePresentation,
     setCurrentSlideDeck,
     removeSlideDeckFromPresentation,
+    addSlideDeckToPresentation,
   } = usePresentations();
 
   const presentation = getCurrentPresentation();
@@ -33,8 +34,28 @@ export const PresentationManager = () => {
     updatePresentation(presentation.id, { slideDeckIds: newOrder.map(deck => deck.id) });
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      if (data.type === 'slideDeck' && data.deckId) {
+        addSlideDeckToPresentation(presentation.id, data.deckId);
+      }
+    } catch (error) {
+      console.error('Error handling drop:', error);
+    }
+  };
+
   return (
-    <div className="min-h-[calc(100vh-61px)] max-w-4xl mx-auto p-4 sm:p-6 md:p-8 space-y-6">
+    <div
+      className="min-h-[calc(100vh-61px)] max-w-4xl mx-auto p-4 sm:p-6 md:p-8 space-y-6"
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
           Manage "{presentation.title}"
