@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Settings as SettingsIcon, Play } from 'lucide-react';
@@ -9,6 +9,7 @@ import MarkdownEditor from '@/components/MarkdownEditor';
 import Slideshow from '@/components/Slideshow';
 import Settings from '@/components/Settings';
 import { usePresentations } from '@/contexts/PresentationsContext';
+import { ScrollArea } from '@radix-ui/react-scroll-area';
 
 const Index = () => {
   const { 
@@ -89,16 +90,16 @@ const Index = () => {
   return (
     <>
       <AppSidebar />
-      <div className="flex-1 flex flex-col">
-        <div className="p-2 border-b flex items-center gap-2">
+      <SidebarInset className="overflow-hidden">
+        <div className="px-2 py-1 border-b flex items-center gap-2">
           <SidebarTrigger />
           
           {currentPresentation && (
             <div className="flex items-center gap-2 flex-1">
-              <Input
+              <input
                 value={currentPresentation.title}
                 onChange={(e) => handlePresentationTitleChange(e.target.value)}
-                className="border-none shadow-none px-2 text-lg font-semibold bg-transparent focus-visible:ring-1 focus-visible:ring-offset-0"
+                className="px-2 rounded w-full text-lg font-semibold bg-transparent focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 placeholder="Presentation title..."
               />
               
@@ -108,28 +109,29 @@ const Index = () => {
                 size="sm"
                 className="ml-auto"
               >
-                <Play className="h-4 w-4 mr-1" />
-                Start Presentation
+                <Play />
+                Present
               </Button>
             </div>
           )}
           
           <Button 
             variant="outline"
-            size="sm"
+            size="icon"
             onClick={() => setShowSettings(true)}
+            className="ml-auto"
           >
             <SettingsIcon className="h-4 w-4" />
           </Button>
         </div>
-        <div className="flex-1">
+        <div className="bg-card/10">
           {currentDeck ? (
             <MarkdownEditor
               markdown={markdown}
               onMarkdownChange={handleMarkdownChange}
             />
           ) : (
-            <div className="min-h-screen flex items-center justify-center bg-background">
+            <div className="min-h-[calc(100vh-61px)] flex items-center justify-center bg-background">
               <div className="text-center">
                 <h1 className="text-2xl font-bold mb-4">Welcome to Markdown Slideshow</h1>
                 <p className="text-muted-foreground">Create a presentation and add slide decks to get started.</p>
@@ -140,7 +142,7 @@ const Index = () => {
             </div>
           )}
         </div>
-      </div>
+      </SidebarInset>
 
       <Settings
         isOpen={showSettings}

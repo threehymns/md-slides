@@ -415,7 +415,7 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar>
+    <Sidebar variant="inset">
       <SidebarHeader className="p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Slideshow Manager</h2>

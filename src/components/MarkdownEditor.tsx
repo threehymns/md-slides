@@ -1,8 +1,8 @@
-
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { usePresentations } from '@/contexts/PresentationsContext';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { usePresentations } from "@/contexts/PresentationsContext";
+import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
 
 interface MarkdownEditorProps {
   markdown: string;
@@ -11,13 +11,19 @@ interface MarkdownEditorProps {
 
 const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   markdown,
-  onMarkdownChange
+  onMarkdownChange,
 }) => {
-  const { getCurrentSlideDeck, getCurrentPresentation, getPresentationSlideDecks } = usePresentations();
+  const {
+    getCurrentSlideDeck,
+    getCurrentPresentation,
+    getPresentationSlideDecks,
+  } = usePresentations();
 
   const currentDeck = getCurrentSlideDeck();
   const currentPresentation = getCurrentPresentation();
-  const presentationSlideDecks = currentPresentation ? getPresentationSlideDecks(currentPresentation.id) : [];
+  const presentationSlideDecks = currentPresentation
+    ? getPresentationSlideDecks(currentPresentation.id)
+    : [];
 
   const sampleMarkdown = `# Welcome to Markdown Slideshow
 
@@ -74,56 +80,58 @@ Click "Start Presentation" or replace this content with your own markdown!
 Separate slides with \`---\``;
 
   return (
-    <div className="min-h-screen p-4 bg-background">
-      <div className="max-w-6xl mx-auto">
-        <div className="rounded-lg shadow-sm border p-6 bg-card">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <p className="text-muted-foreground">
-                {currentDeck ? `Editing: ${currentDeck.title}` : 'Create beautiful presentations from markdown'}
-              </p>
-              {currentPresentation && (
-                <p className="text-sm text-muted-foreground">
-                  Presentation contains {presentationSlideDecks.length} slide deck{presentationSlideDecks.length !== 1 ? 's' : ''}
-                </p>
-              )}
-            </div>
-          </div>
+    <div className="min-h-[calc(100vh-61px)] max-w-6xl mx-auto p-4 space-y-4">
+      <div>
+        <h1 className="text-2xl font-semibold mb-2 text-foreground">
+          {currentDeck?.title}
+        </h1>
+        {currentPresentation && (
+          <p className="text-sm text-muted-foreground">
+            Presentation contains {presentationSlideDecks.length} slide deck
+            {presentationSlideDecks.length !== 1 ? "s" : ""}
+          </p>
+        )}
+      </div>
 
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <label htmlFor="markdown-input" className="text-sm font-medium text-foreground">
-                Markdown Content
-              </label>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => onMarkdownChange(sampleMarkdown)}
-                disabled={!currentDeck}
-              >
-                Load Sample
-              </Button>
-            </div>
-            
-            <Textarea
-              id="markdown-input"
-              value={markdown}
-              onChange={(e) => onMarkdownChange(e.target.value)}
-              placeholder={currentDeck ? "Enter your markdown here... Use --- to separate slides" : "Select a slide deck to edit"}
-              className="min-h-[500px] font-mono text-sm"
-              disabled={!currentDeck}
-            />
-            
-            <div className="text-xs text-muted-foreground">
-              <strong>Tip:</strong> Use <code>---</code> to separate slides. Supports all standard markdown formatting.
-              {currentPresentation && (
-                <span className="block mt-1">
-                  When you start the presentation, all slide decks in "{currentPresentation.title}" will be combined and presented in order.
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
+      <div className="flex items-center justify-between">
+        <label
+          htmlFor="markdown-input"
+          className="text-sm font-medium text-foreground"
+        >
+          Markdown Content
+        </label>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onMarkdownChange(sampleMarkdown)}
+          disabled={!currentDeck}
+        >
+          Load Sample
+        </Button>
+      </div>
+
+      <Textarea
+        id="markdown-input"
+        value={markdown}
+        onChange={(e) => onMarkdownChange(e.target.value)}
+        placeholder={
+          currentDeck
+            ? "Enter your markdown here... Use --- to separate slides"
+            : "Select a slide deck to edit"
+        }
+        className="min-h-[500px] font-mono text-sm"
+        disabled={!currentDeck}
+      />
+      <div className="text-xs text-muted-foreground">
+        <strong>Tip:</strong> Use <code>---</code> to separate slides. Supports
+        all standard markdown formatting.
+        {currentPresentation && (
+          <p className="mt-1">
+            When you start the presentation, all slide decks in "
+            {currentPresentation.title}" will be combined and presented in
+            order.
+          </p>
+        )}
       </div>
     </div>
   );
