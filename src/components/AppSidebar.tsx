@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Plus, FileText, GripVertical, Trash2, Edit, FolderOpen, Presentation, Search } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sidebar,
   SidebarContent,
@@ -67,7 +68,12 @@ const DraggableSlideDeckInPresentation: React.FC<DraggableSlideDeckInPresentatio
   onRemove
 }) => {
   return (
-    <div
+    <motion.div
+      layout
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      transition={{ duration: 0.2 }}
       className={`flex items-center gap-2 p-2 ml-4 rounded-md cursor-pointer transition-colors ${
         isSelected ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent/50'
       } ${isDragging ? 'opacity-50' : ''}`}
@@ -93,7 +99,7 @@ const DraggableSlideDeckInPresentation: React.FC<DraggableSlideDeckInPresentatio
       >
         <Trash2 className="h-2 w-2" />
       </Button>
-    </div>
+    </motion.div>
   );
 };
 
@@ -131,7 +137,12 @@ const DraggableSlideDeck: React.FC<DraggableSlideDeckProps> = ({
   };
 
   return (
-    <div
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2 }}
       className={`flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors ${
         isSelected ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent/50'
       }`}
@@ -178,7 +189,7 @@ const DraggableSlideDeck: React.FC<DraggableSlideDeckProps> = ({
           <Trash2 className="h-2 w-2" />
         </Button>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -267,7 +278,16 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
   };
 
   return (
-    <SidebarMenuItem>
+    <motion.li
+      layout
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.2 }}
+      data-slot="sidebar-menu-item"
+      data-sidebar="menu-item"
+      className="group/menu-item relative"
+    >
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <div
           className={`flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors ${
@@ -329,22 +349,24 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
           onDragOver={handlePresentationDragOver}
           onDrop={handlePresentationDrop}
         >
-          {presentationSlideDecks.map((deck: any, deckIndex: number) => (
-            <DraggableSlideDeckInPresentation
-              key={deck.id}
-              deck={deck}
-              index={deckIndex}
-              presentationId={presentation.id}
-              isDragging={draggedDeckIndex === deckIndex}
-              onDragStart={handleDeckDragStart}
-              onDragEnd={handleDeckDragEnd}
-              onDragOver={handleDeckDragOver}
-              onDrop={handleDeckDrop}
-              isSelected={currentSlideDeckId === deck.id}
-              onSelect={() => setCurrentSlideDeck(deck.id)}
-              onRemove={() => removeSlideDeckFromPresentation(presentation.id, deck.id)}
-            />
-          ))}
+          <AnimatePresence>
+            {presentationSlideDecks.map((deck: any, deckIndex: number) => (
+              <DraggableSlideDeckInPresentation
+                key={deck.id}
+                deck={deck}
+                index={deckIndex}
+                presentationId={presentation.id}
+                isDragging={draggedDeckIndex === deckIndex}
+                onDragStart={handleDeckDragStart}
+                onDragEnd={handleDeckDragEnd}
+                onDragOver={handleDeckDragOver}
+                onDrop={handleDeckDrop}
+                isSelected={currentSlideDeckId === deck.id}
+                onSelect={() => setCurrentSlideDeck(deck.id)}
+                onRemove={() => removeSlideDeckFromPresentation(presentation.id, deck.id)}
+              />
+            ))}
+          </AnimatePresence>
           {presentationSlideDecks.length === 0 && (
             <div className="text-xs text-sidebar-foreground/60 p-2 ml-4 text-center">
               Drop slide decks here
@@ -352,7 +374,7 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
           )}
         </CollapsibleContent>
       </Collapsible>
-    </SidebarMenuItem>
+    </motion.li>
   );
 };
 
@@ -436,22 +458,24 @@ export function AppSidebar() {
           </div>
           <SidebarGroupContent>
             <SidebarMenu>
-              {presentations.map((presentation, index) => (
-                <DraggablePresentation
-                  key={presentation.id}
-                  presentation={presentation}
-                  index={index}
-                  isDragging={draggedIndex === index}
-                  onDragStart={handleDragStart}
-                  onDragEnd={handleDragEnd}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                  isSelected={currentPresentationId === presentation.id}
-                  onSelect={() => setCurrentPresentation(presentation.id)}
-                  onDelete={() => deletePresentation(presentation.id)}
-                  onRename={(newTitle) => updatePresentation(presentation.id, { title: newTitle })}
-                />
-              ))}
+              <AnimatePresence>
+                {presentations.map((presentation, index) => (
+                  <DraggablePresentation
+                    key={presentation.id}
+                    presentation={presentation}
+                    index={index}
+                    isDragging={draggedIndex === index}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    isSelected={currentPresentationId === presentation.id}
+                    onSelect={() => setCurrentPresentation(presentation.id)}
+                    onDelete={() => deletePresentation(presentation.id)}
+                    onRename={(newTitle) => updatePresentation(presentation.id, { title: newTitle })}
+                  />
+                ))}
+              </AnimatePresence>
               {presentations.length === 0 && (
                 <SidebarMenuItem>
                   <div className="text-sm text-sidebar-foreground/60 p-2 text-center">
@@ -486,16 +510,18 @@ export function AppSidebar() {
               />
             </div>
             <div className="space-y-1 max-h-64 overflow-y-auto">
-              {filteredSlideDecks.map((deck) => (
-                <DraggableSlideDeck
-                  key={deck.id}
-                  deck={deck}
-                  isSelected={currentSlideDeckId === deck.id}
-                  onSelect={() => handleSlideDeckSelect(deck.id)}
-                  onDelete={() => deleteSlideDeck(deck.id)}
-                  onRename={(newTitle) => updateSlideDeck(deck.id, { title: newTitle })}
-                />
-              ))}
+              <AnimatePresence>
+                {filteredSlideDecks.map((deck) => (
+                  <DraggableSlideDeck
+                    key={deck.id}
+                    deck={deck}
+                    isSelected={currentSlideDeckId === deck.id}
+                    onSelect={() => handleSlideDeckSelect(deck.id)}
+                    onDelete={() => deleteSlideDeck(deck.id)}
+                    onRename={(newTitle) => updateSlideDeck(deck.id, { title: newTitle })}
+                  />
+                ))}
+              </AnimatePresence>
               {filteredSlideDecks.length === 0 && slideDecks.length > 0 && (
                 <div className="text-xs text-sidebar-foreground/60 p-2 text-center">
                   No matching slide decks
