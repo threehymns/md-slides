@@ -98,7 +98,10 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown, settings, onSettingsCha
   }
 
   return (
-    <div className="w-full min-h-screen flex flex-col relative overflow-hidden bg-background text-foreground">
+    <div 
+      className="w-full min-h-screen flex flex-col relative overflow-hidden bg-background text-foreground"
+      style={{ backgroundColor: settings.style.backgroundColor }}
+    >
       {/* Slide Content */}
       <div className="flex-1 flex items-center justify-center overflow-hidden">
         <div 
@@ -108,7 +111,41 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown, settings, onSettingsCha
             fontSize: `${settings.style.fontSize}vw`,
             lineHeight: settings.style.lineHeight,
             textAlign: settings.style.textAlign,
-          }}
+            ...((settings.style.textColor) && {
+              '--tw-prose-body': settings.style.textColor,
+              '--tw-prose-headings': settings.style.textColor,
+              '--tw-prose-lead': settings.style.textColor,
+              '--tw-prose-links': settings.style.textColor,
+              '--tw-prose-bold': settings.style.textColor,
+              '--tw-prose-counters': settings.style.textColor,
+              '--tw-prose-bullets': settings.style.textColor,
+              '--tw-prose-hr': `color-mix(in srgb, ${settings.style.textColor} 50%, transparent)`,
+              '--tw-prose-quotes': settings.style.textColor,
+              '--tw-prose-quote-borders': `color-mix(in srgb, ${settings.style.textColor} 20%, transparent)`,
+              '--tw-prose-captions': `color-mix(in srgb, ${settings.style.textColor} 70%, transparent)`,
+              '--tw-prose-code': settings.style.textColor,
+              '--tw-prose-pre-code': settings.style.textColor,
+              '--tw-prose-pre-bg': `color-mix(in srgb, ${settings.style.textColor} 10%, transparent)`,
+              '--tw-prose-th-borders': `color-mix(in srgb, ${settings.style.textColor} 30%, transparent)`,
+              '--tw-prose-td-borders': `color-mix(in srgb, ${settings.style.textColor} 20%, transparent)`,
+              '--tw-prose-invert-body': settings.style.textColor,
+              '--tw-prose-invert-headings': settings.style.textColor,
+              '--tw-prose-invert-lead': settings.style.textColor,
+              '--tw-prose-invert-links': settings.style.textColor,
+              '--tw-prose-invert-bold': settings.style.textColor,
+              '--tw-prose-invert-counters': settings.style.textColor,
+              '--tw-prose-invert-bullets': settings.style.textColor,
+              '--tw-prose-invert-hr': `color-mix(in srgb, ${settings.style.textColor} 50%, transparent)`,
+              '--tw-prose-invert-quotes': settings.style.textColor,
+              '--tw-prose-invert-quote-borders': `color-mix(in srgb, ${settings.style.textColor} 20%, transparent)`,
+              '--tw-prose-invert-captions': `color-mix(in srgb, ${settings.style.textColor} 70%, transparent)`,
+              '--tw-prose-invert-code': settings.style.textColor,
+              '--tw-prose-invert-pre-code': settings.style.textColor,
+              '--tw-prose-invert-pre-bg': `color-mix(in srgb, ${settings.style.textColor} 10%, transparent)`,
+              '--tw-prose-invert-th-borders': `color-mix(in srgb, ${settings.style.textColor} 30%, transparent)`,
+              '--tw-prose-invert-td-borders': `color-mix(in srgb, ${settings.style.textColor} 20%, transparent)`,
+            }),
+          } as React.CSSProperties}
           dangerouslySetInnerHTML={{ __html: slides[currentSlide] }}
         />
       </div>

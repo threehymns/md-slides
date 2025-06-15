@@ -12,10 +12,62 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { AlignLeft, AlignCenter, AlignRight, AlignJustify } from 'lucide-react';
 import { SettingsSectionProps } from './types';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 const StyleSettings: React.FC<Omit<SettingsSectionProps, 'onSettingChange'>> = ({ settings, onStyleChange }) => {
   return (
     <div className="space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+          <Label className="text-sm font-medium mb-2 block">
+            Text Color
+          </Label>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={settings.style.textColor || '#000000'}
+              onChange={(e) => onStyleChange('textColor', e.target.value)}
+              className="p-1 h-10 w-10 block bg-card border border-input rounded-md cursor-pointer"
+              title="Select text color"
+            />
+            <Input
+              value={settings.style.textColor || ''}
+              onChange={(e) => onStyleChange('textColor', e.target.value)}
+              placeholder="e.g. #1a2b3c"
+              className="flex-1"
+            />
+            <Button variant="ghost" size="sm" onClick={() => onStyleChange('textColor', undefined)}>
+              Reset
+            </Button>
+          </div>
+        </div>
+
+        <div>
+          <Label className="text-sm font-medium mb-2 block">
+            Background Color
+          </Label>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={settings.style.backgroundColor || '#ffffff'}
+              onChange={(e) => onStyleChange('backgroundColor', e.target.value)}
+              className="p-1 h-10 w-10 block bg-card border border-input rounded-md cursor-pointer"
+              title="Select background color"
+            />
+            <Input
+              value={settings.style.backgroundColor || ''}
+              onChange={(e) => onStyleChange('backgroundColor', e.target.value)}
+              placeholder="e.g. #ffffff"
+              className="flex-1"
+            />
+            <Button variant="ghost" size="sm" onClick={() => onStyleChange('backgroundColor', undefined)}>
+              Reset
+            </Button>
+          </div>
+        </div>
+      </div>
+
       <div>
         <Label htmlFor="font-family" className="text-sm font-medium mb-2 block">
           Font Family

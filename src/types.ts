@@ -3,16 +3,16 @@ export interface SlideDeck {
   id: string;
   title: string;
   content: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface Presentation {
   id: string;
   title: string;
   slideDeckIds: string[];
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface AppSettings {
@@ -25,5 +25,7 @@ export interface AppSettings {
     fontSize: number;
     lineHeight: number;
     textAlign: 'left' | 'center' | 'right' | 'justify';
+    textColor?: string;
+    backgroundColor?: string;
   };
 }
