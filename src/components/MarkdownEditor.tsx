@@ -19,7 +19,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     getCurrentSlideDeck,
     getCurrentPresentation,
     getPresentationSlideDecks,
-    updateDeck,
+    updateSlideDeck,
   } = usePresentations();
 
   const currentDeck = getCurrentSlideDeck();
@@ -106,8 +106,8 @@ Separate slides with \`---\``;
           placeholder="https://example.com/background.jpg or .mp4"
           value={currentDeck?.background || ''}
           onChange={(e) => {
-            if (currentDeck && updateDeck) {
-              updateDeck(currentDeck.id, { background: e.target.value });
+            if (currentDeck) {
+              updateSlideDeck(currentDeck.id, { background: e.target.value });
             }
           }}
           disabled={!currentDeck}
