@@ -83,10 +83,11 @@ const DraggableSlideDeckInPresentation: React.FC<DraggableSlideDeckInPresentatio
         onDragEnd={onDragEnd}
         onDragOver={(e) => onDragOver(e, index)}
         onDrop={(e) => onDrop(e, index)}
+        onClick={onSelect}
       >
         <GripVertical className="h-3 w-3 text-sidebar-foreground/50" />
         <FileText className="h-3 w-3 text-sidebar-foreground/70" />
-        <div className="flex-1 min-w-0" onClick={onSelect}>
+        <div className="flex-1 min-w-0">
           <span className="text-xs truncate">{deck.title}</span>
         </div>
         <Button
@@ -152,10 +153,11 @@ const DraggableSlideDeck: React.FC<DraggableSlideDeckProps> = ({
         }`}
         draggable
         onDragStart={handleDragStart}
+        onClick={onSelect}
       >
         <GripVertical className="h-3 w-3 text-sidebar-foreground/50" />
         <FileText className="h-3 w-3 text-sidebar-foreground/70" />
-        <div className="flex-1 min-w-0" onClick={onSelect}>
+        <div className="flex-1 min-w-0">
           {isEditing ? (
             <Input
               value={editTitle}
@@ -164,6 +166,7 @@ const DraggableSlideDeck: React.FC<DraggableSlideDeckProps> = ({
               onKeyDown={handleKeyPress}
               className="h-5 text-xs"
               autoFocus
+              onClick={(e) => e.stopPropagation()}
             />
           ) : (
             <span className="text-xs truncate">{deck.title}</span>
@@ -303,6 +306,7 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
           onDragEnd={onDragEnd}
           onDragOver={(e) => onDragOver(e, index)}
           onDrop={(e) => onDrop(e, index)}
+          onClick={onSelect}
         >
           <GripVertical className="h-4 w-4 text-sidebar-foreground/50" />
           <CollapsibleTrigger asChild>
@@ -310,7 +314,7 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
               <FolderOpen className="h-4 w-4 text-sidebar-foreground/70" />
             </Button>
           </CollapsibleTrigger>
-          <div className="flex-1 min-w-0" onClick={onSelect}>
+          <div className="flex-1 min-w-0">
             {isEditing ? (
               <Input
                 value={editTitle}
@@ -319,6 +323,7 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
                 onKeyDown={handleKeyPress}
                 className="h-6 text-xs"
                 autoFocus
+                onClick={(e) => e.stopPropagation()}
               />
             ) : (
               <span className="text-sm truncate">{presentation.title}</span>
