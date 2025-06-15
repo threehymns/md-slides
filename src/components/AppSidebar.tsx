@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, FileText, GripVertical, Trash2, Edit, FolderOpen, Presentation, Search } from 'lucide-react';
+import { Plus, FileText, GripVertical, Trash2, Edit, FolderOpen, Presentation, Search, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sidebar,
@@ -75,7 +75,7 @@ const DraggableSlideDeckInPresentation: React.FC<DraggableSlideDeckInPresentatio
       transition={{ duration: 0.2 }}
     >
       <div
-        className={`flex items-center gap-2 p-2 ml-4 rounded-md cursor-pointer transition-colors ${
+        className={`group/item flex items-center gap-2 p-2 ml-4 rounded-md cursor-pointer transition-colors ${
           isSelected ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent/50'
         } ${isDragging ? 'opacity-50' : ''}`}
         draggable
@@ -85,7 +85,7 @@ const DraggableSlideDeckInPresentation: React.FC<DraggableSlideDeckInPresentatio
         onDrop={(e) => onDrop(e, index)}
         onClick={onSelect}
       >
-        <GripVertical className="h-3 w-3 text-sidebar-foreground/50" />
+        <GripVertical className="h-3 w-3 text-sidebar-foreground/10 group-hover/item:text-sidebar-foreground/50" />
         <FileText className="h-3 w-3 text-sidebar-foreground/70" />
         <div className="flex-1 min-w-0">
           <span className="text-xs truncate">{deck.title}</span>
@@ -99,7 +99,7 @@ const DraggableSlideDeckInPresentation: React.FC<DraggableSlideDeckInPresentatio
             onRemove();
           }}
         >
-          <Trash2 className="h-2 w-2" />
+          <X className="h-2 w-2 opacity-0 group-hover/item:opacity-100" />
         </Button>
       </div>
     </motion.div>
@@ -148,14 +148,14 @@ const DraggableSlideDeck: React.FC<DraggableSlideDeckProps> = ({
       transition={{ duration: 0.2 }}
     >
       <div
-        className={`flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors ${
+        className={`group/item flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors ${
           isSelected ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent/50'
         }`}
         draggable
         onDragStart={handleDragStart}
         onClick={onSelect}
       >
-        <GripVertical className="h-3 w-3 text-sidebar-foreground/50" />
+        <GripVertical className="h-3 w-3 text-sidebar-foreground/10 group-hover/item:text-sidebar-foreground/50" />
         <FileText className="h-3 w-3 text-sidebar-foreground/70" />
         <div className="flex-1 min-w-0">
           {isEditing ? (
@@ -172,7 +172,7 @@ const DraggableSlideDeck: React.FC<DraggableSlideDeckProps> = ({
             <span className="text-xs truncate">{deck.title}</span>
           )}
         </div>
-        <div className="flex gap-1">
+        <div className="opacity-0 flex gap-1 group-hover/item:opacity-100">
           <Button
             variant="ghost"
             size="sm"
@@ -298,7 +298,7 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
     >
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <div
-          className={`flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors ${
+          className={`group/item flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors ${
             isSelected ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent/50'
           } ${isDragging ? 'opacity-50' : ''}`}
           draggable
@@ -308,7 +308,7 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
           onDrop={(e) => onDrop(e, index)}
           onClick={onSelect}
         >
-          <GripVertical className="h-4 w-4 text-sidebar-foreground/50" />
+          <GripVertical className="h-4 w-4 text-sidebar-foreground/10 group-hover/item:text-sidebar-foreground/50" />
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm" className="h-4 w-4 p-0">
               <FolderOpen className="h-4 w-4 text-sidebar-foreground/70" />
@@ -329,7 +329,7 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
               <span className="text-sm truncate">{presentation.title}</span>
             )}
           </div>
-          <div className="flex gap-1">
+          <div className="opacity-0 flex gap-1 group-hover/item:opacity-100">
             <Button
               variant="ghost"
               size="sm"
