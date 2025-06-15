@@ -1,15 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Settings as SettingsIcon, Play } from 'lucide-react';
 import { AppSidebar } from '@/components/AppSidebar';
 import MarkdownEditor from '@/components/MarkdownEditor';
 import Slideshow from '@/components/Slideshow';
 import Settings from '@/components/Settings';
 import { usePresentations } from '@/contexts/PresentationsContext';
-import { ScrollArea } from '@radix-ui/react-scroll-area';
+import PresentationManager from '@/components/PresentationManager';
 
 const Index = () => {
   const { 
@@ -124,12 +122,14 @@ const Index = () => {
             <SettingsIcon className="h-4 w-4" />
           </Button>
         </div>
-        <div className="bg-card/10">
+        <div className="bg-card/10 overflow-y-auto h-[calc(100vh-41px)]">
           {currentDeck ? (
             <MarkdownEditor
               markdown={markdown}
               onMarkdownChange={handleMarkdownChange}
             />
+          ) : currentPresentation ? (
+            <PresentationManager />
           ) : (
             <div className="min-h-[calc(100vh-61px)] flex items-center justify-center bg-background">
               <div className="text-center">
