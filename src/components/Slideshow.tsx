@@ -15,7 +15,13 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown }) => {
     showProgressBar: false,
     showSlideCounter: true,
     showNavigationHint: true,
-    autoHideControls: false
+    autoHideControls: false,
+    style: {
+      fontFamily: 'system-ui, sans-serif',
+      fontSize: 5,
+      lineHeight: 1.6,
+      textAlign: 'center' as 'left' | 'center' | 'right' | 'justify',
+    },
   });
   const { theme, setTheme } = useTheme();
 
@@ -104,8 +110,13 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown }) => {
       {/* Slide Content */}
       <div className="flex-1 flex items-center justify-center overflow-hidden">
         <div 
-          className="prose dark:prose-invert max-w-none w-full h-full flex flex-col justify-center text-center overflow-hidden"
-          style={{ fontSize: '5vw', lineHeight: '1.6' }}
+          className="prose dark:prose-invert max-w-none w-full h-full flex flex-col justify-center overflow-hidden"
+          style={{
+            fontFamily: settings.style.fontFamily,
+            fontSize: `${settings.style.fontSize}vw`,
+            lineHeight: settings.style.lineHeight,
+            textAlign: settings.style.textAlign,
+          }}
           dangerouslySetInnerHTML={{ __html: slides[currentSlide] }}
         />
       </div>
