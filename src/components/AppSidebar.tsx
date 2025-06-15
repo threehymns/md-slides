@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, FileText, GripVertical, Trash2, Edit, FolderOpen, Presentation, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -74,31 +73,34 @@ const DraggableSlideDeckInPresentation: React.FC<DraggableSlideDeckInPresentatio
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
       transition={{ duration: 0.2 }}
-      className={`flex items-center gap-2 p-2 ml-4 rounded-md cursor-pointer transition-colors ${
-        isSelected ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent/50'
-      } ${isDragging ? 'opacity-50' : ''}`}
-      draggable
-      onDragStart={() => onDragStart(index)}
-      onDragEnd={onDragEnd}
-      onDragOver={(e) => onDragOver(e, index)}
-      onDrop={(e) => onDrop(e, index)}
     >
-      <GripVertical className="h-3 w-3 text-sidebar-foreground/50" />
-      <FileText className="h-3 w-3 text-sidebar-foreground/70" />
-      <div className="flex-1 min-w-0" onClick={onSelect}>
-        <span className="text-xs truncate">{deck.title}</span>
-      </div>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-5 w-5 p-0 text-destructive hover:text-destructive"
-        onClick={(e) => {
-          e.stopPropagation();
-          onRemove();
-        }}
+      <div
+        className={`flex items-center gap-2 p-2 ml-4 rounded-md cursor-pointer transition-colors ${
+          isSelected ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent/50'
+        } ${isDragging ? 'opacity-50' : ''}`}
+        draggable
+        onDragStart={() => onDragStart(index)}
+        onDragEnd={onDragEnd}
+        onDragOver={(e) => onDragOver(e, index)}
+        onDrop={(e) => onDrop(e, index)}
       >
-        <Trash2 className="h-2 w-2" />
-      </Button>
+        <GripVertical className="h-3 w-3 text-sidebar-foreground/50" />
+        <FileText className="h-3 w-3 text-sidebar-foreground/70" />
+        <div className="flex-1 min-w-0" onClick={onSelect}>
+          <span className="text-xs truncate">{deck.title}</span>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-5 w-5 p-0 text-destructive hover:text-destructive"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+        >
+          <Trash2 className="h-2 w-2" />
+        </Button>
+      </div>
     </motion.div>
   );
 };
@@ -143,51 +145,54 @@ const DraggableSlideDeck: React.FC<DraggableSlideDeckProps> = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.2 }}
-      className={`flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors ${
-        isSelected ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent/50'
-      }`}
-      draggable
-      onDragStart={handleDragStart}
     >
-      <GripVertical className="h-3 w-3 text-sidebar-foreground/50" />
-      <FileText className="h-3 w-3 text-sidebar-foreground/70" />
-      <div className="flex-1 min-w-0" onClick={onSelect}>
-        {isEditing ? (
-          <Input
-            value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
-            onBlur={handleRename}
-            onKeyDown={handleKeyPress}
-            className="h-5 text-xs"
-            autoFocus
-          />
-        ) : (
-          <span className="text-xs truncate">{deck.title}</span>
-        )}
-      </div>
-      <div className="flex gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-5 w-5 p-0"
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsEditing(true);
-          }}
-        >
-          <Edit className="h-2 w-2" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-5 w-5 p-0 text-destructive hover:text-destructive"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-        >
-          <Trash2 className="h-2 w-2" />
-        </Button>
+      <div
+        className={`flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors ${
+          isSelected ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent/50'
+        }`}
+        draggable
+        onDragStart={handleDragStart}
+      >
+        <GripVertical className="h-3 w-3 text-sidebar-foreground/50" />
+        <FileText className="h-3 w-3 text-sidebar-foreground/70" />
+        <div className="flex-1 min-w-0" onClick={onSelect}>
+          {isEditing ? (
+            <Input
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              onBlur={handleRename}
+              onKeyDown={handleKeyPress}
+              className="h-5 text-xs"
+              autoFocus
+            />
+          ) : (
+            <span className="text-xs truncate">{deck.title}</span>
+          )}
+        </div>
+        <div className="flex gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-5 w-5 p-0"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsEditing(true);
+            }}
+          >
+            <Edit className="h-2 w-2" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-5 w-5 p-0 text-destructive hover:text-destructive"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+          >
+            <Trash2 className="h-2 w-2" />
+          </Button>
+        </div>
       </div>
     </motion.div>
   );
