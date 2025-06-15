@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { usePresentations } from "@/contexts/PresentationsContext";
-import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 
 interface MarkdownEditorProps {
   markdown: string;
@@ -17,6 +19,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     getCurrentSlideDeck,
     getCurrentPresentation,
     getPresentationSlideDecks,
+    updateDeck,
   } = usePresentations();
 
   const currentDeck = getCurrentSlideDeck();
@@ -91,6 +94,24 @@ Separate slides with \`---\``;
             {presentationSlideDecks.length !== 1 ? "s" : ""}
           </p>
         )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="background-url" className="text-sm font-medium">
+          Background URL (Image or Video)
+        </Label>
+        <Input
+          id="background-url"
+          type="url"
+          placeholder="https://example.com/background.jpg or .mp4"
+          value={currentDeck?.background || ''}
+          onChange={(e) => {
+            if (currentDeck && updateDeck) {
+              updateDeck(currentDeck.id, { background: e.target.value });
+            }
+          }}
+          disabled={!currentDeck}
+        />
       </div>
 
       <div className="flex items-center justify-between">

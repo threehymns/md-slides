@@ -3,12 +3,13 @@ export interface SlideDeck {
   id: string;
   title: string;
   content: string;
+  background?: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface Presentation {
-  id: string;
+  id:string;
   title: string;
   slideDeckIds: string[];
   createdAt: Date;
@@ -28,4 +29,9 @@ export interface AppSettings {
     textColor?: string;
     backgroundColor?: string;
   };
+}
+
+export interface SlideInfo {
+  html: string;
+  background?: string;
 }

@@ -1,13 +1,5 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
-export interface SlideDeck {
-  id: string;
-  title: string;
-  content: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { SlideDeck } from '@/types';
 
 interface SlideDecksContextType {
   decks: SlideDeck[];

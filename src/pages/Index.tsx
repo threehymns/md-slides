@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Settings as SettingsIcon, Play } from 'lucide-react';
@@ -9,16 +8,17 @@ import Slideshow from '@/components/Slideshow';
 import Settings from '@/components/Settings';
 import { usePresentations } from '@/contexts/PresentationsContext';
 import PresentationManager from '@/components/PresentationManager';
-import { AppSettings } from '@/types';
+import { AppSettings, SlideInfo } from '@/types';
+import { marked } from 'marked';
 
 const Index = () => {
-  const { 
-    getCurrentSlideDeck, 
-    updateSlideDeck, 
-    currentSlideDeckId, 
-    getCurrentPresentation, 
+  const {
+    getCurrentSlideDeck,
+    updateSlideDeck,
+    currentSlideDeckId,
+    getCurrentPresentation,
     getPresentationSlideDecks,
-    updatePresentation 
+    updatePresentation,
   } = usePresentations();
   const [isPresenting, setIsPresenting] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -38,17 +38,25 @@ const Index = () => {
   const currentDeck = getCurrentSlideDeck();
   const currentPresentation = getCurrentPresentation();
   const markdown = currentDeck?.content || '';
+  const presentationSlideDecks = currentPresentation ? getPresentationSlideDecks(currentPresentation.id) : [];
 
-  // Get combined markdown from all slide decks in the current presentation
-  const getPresentationMarkdown = () => {
-    if (!currentPresentation) return '';
-    
-    const slideDecks = getPresentationSlideDecks(currentPresentation.id);
-    return slideDecks
-      .map(deck => deck.content)
-      .filter(content => content.trim())
-      .join('\n\n---\n\n');
-  };
+  const slides = useMemo((): SlideInfo[] => {
+    if (!currentPresentation) return [];
+
+    return presentationSlideDecks.flatMap(deck => {
+      if (!deck.content || !deck.content.trim()) {
+        return [];
+      }
+      return deck.content
+        .split(/\n---\n|\r\n---\r\n|\r---\r/)
+        .map(slide => slide.trim())
+        .filter(slide => slide.length > 0)
+        .map(slideContent => ({
+          html: marked(slideContent) as string,
+          background: deck.background,
+        }));
+    });
+  }, [currentPresentation, presentationSlideDecks]);
 
   const handleMarkdownChange = (newContent: string) => {
     if (currentDeck) {
@@ -57,8 +65,7 @@ const Index = () => {
   };
 
   const handleStartPresentation = () => {
-    const presentationMarkdown = getPresentationMarkdown();
-    if (presentationMarkdown.trim()) {
+    if (slides.length > 0) {
       setIsPresenting(true);
     }
   };
@@ -73,11 +80,8 @@ const Index = () => {
     }
   };
 
-  // Check if presentation has content to present
-  const presentationSlideDecks = currentPresentation ? getPresentationSlideDecks(currentPresentation.id) : [];
   const canStartPresentation = presentationSlideDecks.some(deck => deck.content.trim());
 
-  // Handle escape key to exit presentation
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && isPresenting) {
@@ -90,7 +94,7 @@ const Index = () => {
   }, [isPresenting]);
 
   if (isPresenting) {
-    return <Slideshow markdown={getPresentationMarkdown()} settings={settings} onSettingsChange={setSettings} />;
+    return <Slideshow slides={slides} settings={settings} onSettingsChange={setSettings} />;
   }
 
   return (

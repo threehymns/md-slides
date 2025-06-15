@@ -1,16 +1,15 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { marked } from 'marked';
+import React, { useState, useEffect } from 'react';
 import Settings from './Settings';
 import { useTheme } from '@/components/ThemeProvider';
-import { AppSettings } from '@/types';
+import { AppSettings, SlideInfo } from '@/types';
 
 interface SlideshowProps {
-  markdown: string;
+  slides: SlideInfo[];
   settings: AppSettings;
   onSettingsChange: (settings: AppSettings) => void;
 }
 
-const Slideshow: React.FC<SlideshowProps> = ({ markdown, settings, onSettingsChange }) => {
+const Slideshow: React.FC<SlideshowProps> = ({ slides, settings, onSettingsChange }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const { theme, setTheme } = useTheme();
@@ -19,14 +18,8 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown, settings, onSettingsCha
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
-  // Parse markdown and split into slides - only split on --- that are on their own line
-  const slides = useMemo(() => {
-    const slideTexts = markdown
-      .split(/\n---\n|\r\n---\r\n|\r---\r/)
-      .map(slide => slide.trim())
-      .filter(slide => slide.length > 0);
-    return slideTexts.map(slideText => marked(slideText));
-  }, [markdown]);
+  const isVideo = (url: string): boolean => !!url && /\.(mp4|webm|ogg)$/i.test(url);
+  const isImage = (url: string): boolean => !!url && /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(url);
 
   // Keyboard navigation
   useEffect(() => {
@@ -86,6 +79,8 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown, settings, onSettingsCha
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [slides.length, showSettings, theme, setTheme]);
 
+  const currentBackground = slides[currentSlide]?.background;
+
   if (slides.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -100,10 +95,23 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown, settings, onSettingsCha
   return (
     <div 
       className="w-full min-h-screen flex flex-col relative overflow-hidden bg-background text-foreground"
-      style={{ backgroundColor: settings.style.backgroundColor }}
+      style={{
+        ...(!currentBackground && { backgroundColor: settings.style.backgroundColor }),
+        ...(currentBackground && isImage(currentBackground) && { backgroundImage: `url(${currentBackground})` }),
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
     >
+      {currentBackground && isVideo(currentBackground) && (
+        <div className="absolute inset-0 z-0">
+           <video autoPlay loop muted playsInline className="w-full h-full object-cover">
+             <source src={currentBackground} />
+           </video>
+           <div className="absolute inset-0 bg-black/20" />
+         </div>
+      )}
       {/* Slide Content */}
-      <div className="flex-1 flex items-center justify-center overflow-hidden">
+      <div className="flex-1 flex items-center justify-center overflow-hidden relative z-10 p-8">
         <div 
           className="prose dark:prose-invert max-w-none w-full h-full flex flex-col justify-center overflow-hidden"
           style={{
@@ -146,7 +154,7 @@ const Slideshow: React.FC<SlideshowProps> = ({ markdown, settings, onSettingsCha
               '--tw-prose-invert-td-borders': `color-mix(in srgb, ${settings.style.textColor} 20%, transparent)`,
             }),
           } as React.CSSProperties}
-          dangerouslySetInnerHTML={{ __html: slides[currentSlide] }}
+          dangerouslySetInnerHTML={{ __html: slides[currentSlide].html }}
         />
       </div>
 
