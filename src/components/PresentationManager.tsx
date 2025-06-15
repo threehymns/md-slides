@@ -2,9 +2,8 @@
 import React from 'react';
 import { usePresentations, SlideDeck } from '@/contexts/PresentationsContext';
 import { Reorder, AnimatePresence } from 'framer-motion';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { GripVertical, Trash2, Edit } from 'lucide-react';
+import { GripVertical, X, Edit } from 'lucide-react';
 
 export const PresentationManager = () => {
   const {
@@ -58,17 +57,15 @@ export const PresentationManager = () => {
                 className="bg-card rounded-lg shadow-sm list-none"
                 whileDrag={{ scale: 1.02, boxShadow: "0px 5px 15px rgba(0,0,0,0.1)" }}
               >
-                <div className="flex items-center p-4">
+                <div className="flex items-center px-4 py-2.5">
                   <GripVertical className="h-5 w-5 text-muted-foreground mr-4 cursor-grab flex-shrink-0" />
                   <div className="flex-1 font-medium truncate" title={deck.title}>{deck.title}</div>
-                  <div className="flex items-center gap-2 ml-4">
-                    <Button variant="ghost" size="sm" onClick={() => setCurrentSlideDeck(deck.id)}>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit
+                  <div className="flex items-center ml-4">
+                    <Button variant="ghost" size="icon" onClick={() => setCurrentSlideDeck(deck.id)}>
+                      <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => removeSlideDeckFromPresentation(presentation.id, deck.id)}>
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Remove
+                    <Button variant="ghost" size="icon" className="hover:text-destructive dark:hover:bg-destructive/10 hover:bg-destructive/10" onClick={() => removeSlideDeckFromPresentation(presentation.id, deck.id)}>
+                      <X className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
