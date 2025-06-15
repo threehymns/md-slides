@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { X, SettingsIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import AppearanceSettings from './settings/AppearanceSettings';
 import StyleSettings from './settings/StyleSettings';
 import NavigationSettings from './settings/NavigationSettings';
 import KeyboardSettings from './settings/KeyboardSettings';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface SettingsProps {
   isOpen: boolean;
@@ -93,25 +95,27 @@ const Settings: React.FC<SettingsProps> = ({
           </Button>
         </div>
         
-        <div className="flex flex-1">
+        <div className="flex flex-1 overflow-hidden">
           <SettingsSidebar selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
           
           {/* Main content area */}
-          <div className="flex-1 p-6 overflow-auto">
-            <h3 className="text-lg font-medium mb-6 capitalize flex items-center gap-2">
-              {(() => {
-                const category = CATEGORIES.find(c => c.id === selectedCategory);
-                const Icon = category?.icon;
-                return (
-                  <>
-                    {Icon && <Icon className="h-5 w-5" />}
-                    {category?.name} Settings
-                  </>
-                );
-              })()}
-            </h3>
-            {renderSettings()}
-          </div>
+          <ScrollArea className="flex-1">
+            <div className="p-6">
+              <h3 className="text-lg font-medium mb-6 capitalize flex items-center gap-2">
+                {(() => {
+                  const category = CATEGORIES.find(c => c.id === selectedCategory);
+                  const Icon = category?.icon;
+                  return (
+                    <>
+                      {Icon && <Icon className="h-5 w-5" />}
+                      {category?.name} Settings
+                    </>
+                  );
+                })()}
+              </h3>
+              {renderSettings()}
+            </div>
+          </ScrollArea>
         </div>
       </div>
     </div>
