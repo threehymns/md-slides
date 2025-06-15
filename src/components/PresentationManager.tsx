@@ -1,6 +1,6 @@
-
 import React from 'react';
-import { usePresentations, SlideDeck } from '@/contexts/PresentationsContext';
+import { usePresentations } from '@/contexts/PresentationsContext';
+import { SlideDeck } from '@/types';
 import { Reorder, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { GripVertical, X, Edit } from 'lucide-react';
