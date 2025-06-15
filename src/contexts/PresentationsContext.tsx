@@ -1,21 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { SlideDeck, Presentation } from '@/types'; // Using a shared types file would be a good refactor
-
-export interface SlideDeck {
-  id: string;
-  title: string;
-  content: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface Presentation {
-  id: string;
-  title: string;
-  slideDeckIds: string[]; // References to slide deck IDs instead of embedded decks
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { SlideDeck, Presentation } from '@/types';
 
 interface PresentationsContextType {
   presentations: Presentation[];
@@ -170,6 +154,7 @@ export const PresentationsProvider: React.FC<{ children: React.ReactNode }> = ({
       id: Date.now().toString(),
       title,
       content,
+      background: '',
       createdAt: new Date(),
       updatedAt: new Date()
     };

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { SlideDeck } from '@/types';
 
@@ -64,6 +65,7 @@ export const SlideDecksProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       id: Date.now().toString(),
       title,
       content,
+      background: '',
       createdAt: new Date(),
       updatedAt: new Date()
     };
