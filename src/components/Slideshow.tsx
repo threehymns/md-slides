@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Settings from './Settings';
 import { useTheme } from '@/components/ThemeProvider';
@@ -81,11 +80,6 @@ const Slideshow: React.FC<SlideshowProps> = ({ slides, settings, onSettingsChang
   }, [slides.length, showSettings, theme, setTheme]);
 
   const currentBackground = slides[currentSlide]?.background;
-  
-  // Debug logging
-  console.log('Current slide:', currentSlide);
-  console.log('Current background:', currentBackground);
-  console.log('All slides:', slides.map(slide => ({ html: slide.html.substring(0, 50), background: slide.background })));
 
   if (slides.length === 0) {
     return (
@@ -103,12 +97,9 @@ const Slideshow: React.FC<SlideshowProps> = ({ slides, settings, onSettingsChang
       className="w-full min-h-screen flex flex-col relative overflow-hidden bg-background text-foreground"
       style={{
         ...(!currentBackground && { backgroundColor: settings.style.backgroundColor }),
-        ...(currentBackground && isImage(currentBackground) && { 
-          backgroundImage: `url(${currentBackground})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }),
+        ...(currentBackground && isImage(currentBackground) && { backgroundImage: `url(${currentBackground})` }),
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
       }}
     >
       {currentBackground && isVideo(currentBackground) && (
@@ -119,16 +110,6 @@ const Slideshow: React.FC<SlideshowProps> = ({ slides, settings, onSettingsChang
            <div className="absolute inset-0 bg-black/20" />
          </div>
       )}
-      
-      {/* Debug info - remove this after testing */}
-      {currentBackground && (
-        <div className="absolute top-4 left-4 bg-black/70 text-white p-2 rounded text-xs z-50">
-          Background: {currentBackground}
-          <br />
-          Type: {isVideo(currentBackground) ? 'Video' : isImage(currentBackground) ? 'Image' : 'Unknown'}
-        </div>
-      )}
-      
       {/* Slide Content */}
       <div className="flex-1 flex items-center justify-center overflow-hidden relative z-10 p-8">
         <div 
