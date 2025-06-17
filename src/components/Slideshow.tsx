@@ -44,10 +44,13 @@ const Slideshow = () => {
         .split(/\n---\n|\r\n---\r\n|\r---\r/)
         .map(slide => slide.trim())
         .filter(slide => slide.length > 0)
-        .map(slideContent => ({
-          html: marked(slideContent) as string,
-          background: deck.background,
-        }));
+        .map(slideContent => {
+          return {
+            html: marked(slideContent) as string,
+            background: deck.background,
+            mediaType: deck.mediaType,
+          };
+        });
     });
   }, [currentPresentation, presentationSlideDecks]);
 
@@ -58,9 +61,6 @@ const Slideshow = () => {
   const handleCloseSettings = useCallback(() => {
     setIsSettingsOpen(false);
   }, []);
-
-  const isVideo = (url: string): boolean => !!url && /\.(mp4|webm|ogg)$/i.test(url);
-  const isImage = (url: string): boolean => !!url && /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(url);
 
   // Keyboard navigation
   useEffect(() => {
@@ -142,13 +142,13 @@ const Slideshow = () => {
       <div
         className="w-full min-h-screen flex flex-col relative overflow-hidden bg-background text-foreground"
         style={{
-          ...(!currentBackground && { backgroundColor: settings.style.backgroundColor }),
-          ...(currentBackground && isImage(currentBackground) && { backgroundImage: `url(${currentBackground})` }),
+          ...(!slides[currentSlide]?.background && { backgroundColor: settings.style.backgroundColor }),
+          ...(slides[currentSlide]?.background && slides[currentSlide].mediaType === 'image' && { backgroundImage: `url(${slides[currentSlide].background})` }),
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
       >
-        {currentBackground && isVideo(currentBackground) && (
+        {slides[currentSlide]?.background && slides[currentSlide].mediaType === 'video' && (
           <div className="absolute inset-0 z-0">
              <video autoPlay loop muted playsInline className="w-full h-full object-cover">
                <source src={currentBackground} />

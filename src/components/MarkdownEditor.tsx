@@ -5,6 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { usePresentations } from "@/contexts/PresentationsContext";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { ImageIcon, VideoIcon } from "lucide-react";
 
 interface MarkdownEditorProps {
   markdown: string;
@@ -98,20 +100,40 @@ Separate slides with \`---\``;
 
       <div className="space-y-2">
         <Label htmlFor="background-url" className="text-sm font-medium">
-          Background URL (Image or Video)
+          Background URL
         </Label>
-        <Input
-          id="background-url"
-          type="url"
-          placeholder="https://example.com/background.jpg or .mp4"
-          value={currentDeck?.background || ''}
-          onChange={(e) => {
-            if (currentDeck) {
-              updateSlideDeck(currentDeck.id, { background: e.target.value });
-            }
-          }}
-          disabled={!currentDeck}
-        />
+        <div className="flex gap-2">
+          <Input
+            id="background-url"
+            type="url"
+            placeholder="https://example.com/background.jpg"
+            value={currentDeck?.background || ''}
+            onChange={(e) => {
+              if (currentDeck) {
+                updateSlideDeck(currentDeck.id, { background: e.target.value });
+              }
+            }}
+            disabled={!currentDeck}
+            className="flex-1"
+          />
+          <ToggleGroup
+            type="single"
+            value={currentDeck?.mediaType || 'image'}
+            onValueChange={(value) => {
+              if (currentDeck && (value === 'image' || value === 'video')) {
+                updateSlideDeck(currentDeck.id, { mediaType: value });
+              }
+            }}
+            disabled={!currentDeck}
+          >
+            <ToggleGroupItem value="image" aria-label="Image">
+              <ImageIcon className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="video" aria-label="Video">
+              <VideoIcon className="h-4 w-4" />
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
       </div>
 
       <div className="flex items-center justify-between">

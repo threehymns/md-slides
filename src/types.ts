@@ -4,6 +4,7 @@ export interface SlideDeck {
   title: string;
   content: string;
   background?: string;
+  mediaType?: 'image' | 'video';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -34,4 +35,5 @@ export interface AppSettings {
 export interface SlideInfo {
   html: string;
   background?: string;
+  mediaType?: 'image' | 'video';
 }
