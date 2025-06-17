@@ -1,0 +1,40 @@
+import MarkdownEditor from '@/components/MarkdownEditor';
+import { usePresentations } from '@/contexts/PresentationsContext';
+
+const EditPage = () => {
+  const { 
+    getCurrentSlideDeck, 
+    updateSlideDeck 
+  } = usePresentations();
+
+  const currentDeck = getCurrentSlideDeck();
+  const markdown = currentDeck?.content || '';
+
+  const handleMarkdownChange = (newContent: string) => {
+    if (currentDeck) {
+      updateSlideDeck(currentDeck.id, { content: newContent });
+    }
+  };
+
+  if (!currentDeck) {
+    return (
+      <div className="min-h-full flex items-center justify-center bg-background">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">No Slide Deck Selected</h1>
+          <p className="text-muted-foreground">
+            Please select a slide deck to edit.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <MarkdownEditor
+      markdown={markdown}
+      onMarkdownChange={handleMarkdownChange}
+    />
+  );
+};
+
+export default EditPage;

@@ -8,7 +8,10 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { PresentationsProvider } from "@/contexts/PresentationsContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Index from "./pages/Index";
+import EditPage from "./pages/EditPage";
+import Slideshow from "./components/Slideshow";
 import NotFound from "./pages/NotFound";
+import MainLayout from "./layouts/MainLayout";
 
 const queryClient = new QueryClient();
 
@@ -23,7 +26,11 @@ const App = () => (
             <SidebarProvider>
               <div className="min-h-screen flex w-full">
                 <Routes>
-                  <Route path="/" element={<Index />} />
+                  <Route element={<MainLayout />}>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/edit" element={<EditPage />} />
+                  </Route>
+                  <Route path="/present" element={<Slideshow />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </div>

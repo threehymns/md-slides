@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Plus, FileText, GripVertical, Trash2, Edit, FolderOpen, Presentation, Search, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, FileText, GripVertical, Trash2, Edit, FolderOpen, Search, X } from 'lucide-react';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import {
   Sidebar,
@@ -185,7 +186,8 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
   onSelect,
   onDelete,
   onRename
-}) => {
+}: DraggablePresentationProps) => {
+  const navigate = useNavigate();
   const {
     currentSlideDeckId,
     setCurrentSlideDeck,
@@ -321,7 +323,10 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
                   deck={deck}
                   presentationId={presentation.id}
                   isSelected={currentSlideDeckId === deck.id}
-                  onSelect={() => setCurrentSlideDeck(deck.id)}
+                  onSelect={() => {
+                    setCurrentSlideDeck(deck.id);
+                    navigate(`/edit`);
+                  }}
                   onRemove={() => removeSlideDeckFromPresentation(presentation.id, deck.id)}
                 />
               ))}
@@ -339,6 +344,7 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
 };
 
 export function AppSidebar() {
+  const navigate = useNavigate();
   const {
     presentations,
     slideDecks,
@@ -378,6 +384,7 @@ export function AppSidebar() {
   const handleSlideDeckSelect = (deckId: string) => {
     setCurrentPresentation(null); // Deactivate current presentation
     setCurrentSlideDeck(deckId);
+    navigate(`/edit`);
   };
 
   return (
@@ -409,7 +416,10 @@ export function AppSidebar() {
                       key={presentation.id}
                       presentation={presentation}
                       isSelected={currentPresentationId === presentation.id}
-                      onSelect={() => setCurrentPresentation(presentation.id)}
+                      onSelect={() => {
+                        setCurrentPresentation(presentation.id);
+                        navigate(`/`);
+                      }}
                       onDelete={() => deletePresentation(presentation.id)}
                       onRename={(newTitle) => updatePresentation(presentation.id, { title: newTitle })}
                     />
