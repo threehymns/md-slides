@@ -311,7 +311,7 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
           </div>
         </div>
         <CollapsibleContent 
-          className="space-y-1"
+          className="space-y-1 pt-1"
           onDragOver={handlePresentationDragOver}
           onDrop={handlePresentationDrop}
         >
