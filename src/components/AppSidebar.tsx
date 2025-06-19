@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, FileText, GripVertical, FolderOpen, Search } from 'lucide-react';
-import { AnimatePresence, Reorder } from 'framer-motion';
+import { AnimatePresence, Reorder, motion } from 'framer-motion';
 import {
   Sidebar,
   SidebarContent,
@@ -68,10 +68,11 @@ const SlideDeckItem: React.FC<SlideDeckItemProps> = ({
       value={deck}
       as="div"
       layout
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.2 }}
+      initial={{ opacity: 0, x: -10, scale: 0.95 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={{ opacity: 0, x: -10, transition: { duration: 0.15 } }}
+      whileDrag={{ scale: 1.05, zIndex: 1 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
     >
       <div
         className={`
@@ -84,7 +85,7 @@ const SlideDeckItem: React.FC<SlideDeckItemProps> = ({
         onDragStart={handleDragStart}
         onClick={onSelect}
       >
-        <GripVertical className="h-3 w-3 text-sidebar-foreground/10 group-hover/item:text-sidebar-foreground/50 cursor-grab" />
+        <GripVertical className="h-3 w-3 text-sidebar-foreground/20 group-hover/item:text-sidebar-foreground/80 cursor-grab transition-colors duration-150" />
         <FileText className="h-3 w-3 text-sidebar-foreground/70" />
         <EditableTitle
           initialTitle={deck.title}
@@ -157,24 +158,26 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
       value={presentation}
       as="li"
       layout
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.2 }}
+      initial={{ opacity: 0, y: -10, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -10, transition: { duration: 0.15 } }}
+      whileDrag={{ scale: 1.02, zIndex: 1 }}
+      transition={{ type: "spring", stiffness: 250, damping: 20 }}
       data-slot="sidebar-menu-item"
       data-sidebar="menu-item"
       className="group/menu-item relative"
     >
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <div
+        <motion.div
           className={`
             group/item flex items-center gap-2 p-2
             rounded-md cursor-pointer transition-colors
             ${isSelected ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent/50'}
           `}
           onClick={onSelect}
+          layout
         >
-          <GripVertical className="h-4 w-4 text-sidebar-foreground/10 group-hover/item:text-sidebar-foreground/50 cursor-grab" />
+          <GripVertical className="h-4 w-4 text-sidebar-foreground/20 group-hover/item:text-sidebar-foreground/80 cursor-grab transition-colors duration-150" />
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm" className="h-4 w-4 p-0">
               <FolderOpen className="h-4 w-4 text-sidebar-foreground/70" />
@@ -193,37 +196,45 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
             iconClassName="h-3 w-3"
             isStandalone={true} // Presentations are always standalone in this context for delete button
           />
-        </div>
+        </motion.div>
         <CollapsibleContent
           onDragOver={handlePresentationDragOver}
           onDrop={handlePresentationDrop}
+          className="overflow-hidden"
         >
-          <Reorder.Group axis="y" values={presentationSlideDecks} onReorder={handleReorderDecks} className="space-y-1 pt-1">
-            <AnimatePresence>
-              {presentationSlideDecks.map((deck: SlideDeck) => (
-                <SlideDeckItem
-                  key={deck.id}
-                  deck={deck}
-                  isSelected={currentSlideDeckId === deck.id}
-                  onSelect={() => {
-                    setCurrentSlideDeck(deck.id);
-                    navigate(`/edit`);
-                  }}
-                  onRemove={() => removeSlideDeckFromPresentation(presentation.id, deck.id)}
-                  isStandalone={false}
-                  onRename={(newTitle) => updateSlideDeck(deck.id, { title: newTitle })}
-                />
-              ))}
-            </AnimatePresence>
-          </Reorder.Group>
-          {presentationSlideDecks.length === 0 && (
-            <div className="
-              text-xs text-sidebar-foreground/60
-              p-2 ml-4 text-center
-            ">
-              Drop slide decks here
-            </div>
-          )}
+          <motion.div
+            layout
+            initial={{ opacity: 0, scale: 0.9, height: 0 }}
+            animate={{ opacity: 1, scale: 1, height: 'auto' }}
+            transition={{ duration: 0.2 }}
+          >
+            <Reorder.Group axis="y" values={presentationSlideDecks} onReorder={handleReorderDecks} className="space-y-1 pt-1">
+              <AnimatePresence>
+                {presentationSlideDecks.map((deck: SlideDeck) => (
+                  <SlideDeckItem
+                    key={deck.id}
+                    deck={deck}
+                    isSelected={currentSlideDeckId === deck.id}
+                    onSelect={() => {
+                      setCurrentSlideDeck(deck.id);
+                      navigate(`/edit`);
+                    }}
+                    onRemove={() => removeSlideDeckFromPresentation(presentation.id, deck.id)}
+                    isStandalone={false}
+                    onRename={(newTitle) => updateSlideDeck(deck.id, { title: newTitle })}
+                  />
+                ))}
+              </AnimatePresence>
+            </Reorder.Group>
+            {presentationSlideDecks.length === 0 && (
+              <div className="
+                text-xs text-sidebar-foreground/60
+                p-2 ml-4 text-center
+              ">
+                Drop slide decks here
+              </div>
+            )}
+          </motion.div>
         </CollapsibleContent>
       </Collapsible>
     </Reorder.Item>
