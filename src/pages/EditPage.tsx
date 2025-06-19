@@ -41,7 +41,7 @@ const EditPage = () => {
           {isVisualMode ? 'Switch to Markdown Editor' : 'Switch to Visual Editor'}
         </Button>
       </div>
-      <div className="max-w-6xl mx-auto p-4">
+      <div className="max-w-3xl mx-auto p-4">
         {isVisualMode ? (
           <VisualEditor
             markdown={markdown}

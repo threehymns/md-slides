@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Reorder } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import TextareaAutosize from 'react-textarea-autosize';
+import { PlusCircleIcon, XIcon } from 'lucide-react'; // Import XIcon
 
 const DEFAULT_NEW_SLIDE_CONTENT = "# New Slide\n\nEdit this content.";
 
@@ -113,41 +115,56 @@ const VisualEditor: React.FC<VisualEditorProps> = ({ markdown: markdownProp, onM
   // The main useEffect depending on [markdownProp] is now the single source of truth for external changes.
 
   return (
-    <Reorder.Group axis="y" values={slideItems} onReorder={handleReorder} className="space-y-4">
+    <Reorder.Group axis="y" values={slideItems} onReorder={handleReorder} className="w-full"> {/* Removed space-y-4 for more precise control with adder */}
       {slideItems.map((item) => (
-        <Reorder.Item
-          key={item.id}
-          value={item}
-          className="bg-card p-4 rounded-lg shadow border flex flex-col"
-        >
-          <div className="flex justify-end space-x-2 mb-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleAddSlide(item.id)}
+        <React.Fragment key={item.id}>
+          <div className="relative group"> {/* Wrapper for Reorder.Item and its specific adder button */}
+            <Reorder.Item
+              value={item}
+              className="flex flex-col py-2 bg-transparent pt-10" // Adjusted pt-10 for new delete button size/pos
             >
-              Add New Slide Here
-            </Button>
+              {/* The old actions bar div that contained the delete button is now removed */}
+              <TextareaAutosize
+                value={item.content}
+                onChange={(e) => handleTextChange(item.id, e.target.value)}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-primary text-sm bg-background"
+                minRows={3}
+              />
+               {/* Separator is part of the item, but only if not the last one conceptually (though adders are between) */}
+               {/* This hr might be redundant if adders provide enough visual separation or if we add it inside the adder div */}
+            </Reorder.Item>
+
+            {/* Inter-slide adder: appears on hover of the Reorder.Item wrapper (group) */}
+            <div className="absolute inset-x-0 bottom-[-16px] h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
+              <Button
+                variant="ghost"
+                aria-label="Add new slide after this"
+                size="icon"
+                className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 w-8 h-8"
+                onClick={() => handleAddSlide(item.id)}
+              >
+                <PlusCircleIcon className="w-5 h-5" />
+              </Button>
+            </div>
+
+            {/* New Delete Button: top-right, appears on hover of the Reorder.Item wrapper (group) */}
             <Button
-              variant="destructive"
-              size="sm"
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 rounded-full hover:bg-destructive/20 text-destructive opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-20 w-8 h-8" // Made consistent: w-8 h-8, top-2 right-2
               onClick={() => handleDeleteSlide(item.id)}
+              aria-label="Delete this slide"
             >
-              Delete This Slide
+              <XIcon className="w-5 h-5" /> {/* Icon size made consistent with PlusCircleIcon */}
             </Button>
           </div>
-          <textarea
-            value={item.content}
-            onChange={(e) => handleTextChange(item.id, e.target.value)}
-            rows={8}
-            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-primary grow"
-          />
-          {slideItems.length > 1 && item.id !== slideItems[slideItems.length -1].id && ( // Show separator if not the last slide
-            <hr className="my-4 border-border" />
-          )}
-        </Reorder.Item>
+           {/* Separator between items */}
+           {item.id !== slideItems[slideItems.length -1].id && (
+             <hr className="my-4 border-border" /> {/* Removed opacity, increased margin to my-4 */}
+           )}
+        </React.Fragment>
       ))}
-       {slideItems.length === 0 && ( // Should ideally not be reached if we always ensure one slide
+       {slideItems.length === 0 && (
         <div className="text-center py-10">
           <p className="mb-4 text-muted-foreground">The editor is currently empty.</p>
           <Button
