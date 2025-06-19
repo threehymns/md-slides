@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import MarkdownEditor from '@/components/MarkdownEditor';
+import VisualEditor from '@/components/VisualEditor'; // Import VisualEditor
+import { Button } from '@/components/ui/button'; // Import Button
 import { usePresentations } from '@/contexts/PresentationsContext';
 
 const EditPage = () => {
@@ -9,6 +12,8 @@ const EditPage = () => {
 
   const currentDeck = getCurrentSlideDeck();
   const markdown = currentDeck?.content || '';
+
+  const [isVisualMode, setIsVisualMode] = useState(false); // State for editor mode
 
   const handleMarkdownChange = (newContent: string) => {
     if (currentDeck) {
@@ -30,10 +35,24 @@ const EditPage = () => {
   }
 
   return (
-    <MarkdownEditor
-      markdown={markdown}
-      onMarkdownChange={handleMarkdownChange}
-    />
+    <div className="p-4">
+      <div className="mb-4">
+        <Button onClick={() => setIsVisualMode(!isVisualMode)}>
+          {isVisualMode ? 'Switch to Markdown Editor' : 'Switch to Visual Editor'}
+        </Button>
+      </div>
+      {isVisualMode ? (
+        <VisualEditor
+          markdown={markdown}
+          onMarkdownChange={handleMarkdownChange}
+        />
+      ) : (
+        <MarkdownEditor
+          markdown={markdown}
+          onMarkdownChange={handleMarkdownChange}
+        />
+      )}
+    </div>
   );
 };
 
