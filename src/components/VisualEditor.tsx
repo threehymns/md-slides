@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Reorder } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 
@@ -18,12 +18,20 @@ const generateUniqueId = (): string => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 };
 
-const VisualEditor: React.FC<VisualEditorProps> = ({ markdown, onMarkdownChange }) => {
+const VisualEditor: React.FC<VisualEditorProps> = ({ markdown: markdownProp, onMarkdownChange }) => {
   const [slideItems, setSlideItems] = useState<SlideItem[]>([]);
+  const internalUpdateRef = useRef(false);
 
+  // Effect for initializing and handling external markdownProp changes
   useEffect(() => {
+    if (internalUpdateRef.current) {
+      internalUpdateRef.current = false;
+      return;
+    }
+
     const contentToSlides = (md: string): SlideItem[] => {
       if (md.trim() === "") {
+        // If markdownProp is empty, always initialize with one default slide
         return [{ id: generateUniqueId(), content: DEFAULT_NEW_SLIDE_CONTENT }];
       }
       return md.split('\n---\n').map(content => ({
@@ -31,11 +39,13 @@ const VisualEditor: React.FC<VisualEditorProps> = ({ markdown, onMarkdownChange 
         content,
       }));
     };
-    setSlideItems(contentToSlides(markdown));
-  }, [markdown]);
+    setSlideItems(contentToSlides(markdownProp));
+  }, [markdownProp]);
+
 
   const handleReorder = (newOrder: SlideItem[]) => {
     setSlideItems(newOrder);
+    internalUpdateRef.current = true;
     onMarkdownChange(newOrder.map(item => item.content).join('\n---\n'));
   };
 
@@ -44,6 +54,7 @@ const VisualEditor: React.FC<VisualEditorProps> = ({ markdown, onMarkdownChange 
       item.id === id ? { ...item, content: newText } : item
     );
     setSlideItems(newItems);
+    internalUpdateRef.current = true;
     onMarkdownChange(newItems.map(item => item.content).join('\n---\n'));
   };
 
@@ -51,18 +62,29 @@ const VisualEditor: React.FC<VisualEditorProps> = ({ markdown, onMarkdownChange 
     const newSlide: SlideItem = { id: generateUniqueId(), content: DEFAULT_NEW_SLIDE_CONTENT };
     let newItems = [...slideItems];
 
-    if (afterId === null) { // Add to beginning if editor was empty
-        newItems = [newSlide];
+    if (afterId === null || slideItems.length === 0) {
+        // If afterId is null (e.g. "Add First Slide" button) or if slideItems is somehow empty
+        newItems = [newSlide, ...newItems.filter(item => item.content !== DEFAULT_NEW_SLIDE_CONTENT || newItems.length > 1 )];
+         // Filter out initial default slide if it exists and we're adding a new one, unless it was the only one.
+        if (newItems.length > 1 && newItems[1]?.content === DEFAULT_NEW_SLIDE_CONTENT && newItems[1]?.id !== newSlide.id) {
+             if(slideItems.length === 1 && slideItems[0].content === DEFAULT_NEW_SLIDE_CONTENT){
+                newItems.shift(); // Remove the original default slide if it was the only one and now we add a new one
+             }
+        }
+        // If the list was truly empty and we add one, ensure it's just the new slide.
+        if (slideItems.length === 0) newItems = [newSlide];
+
+
     } else {
         const insertAtIndex = newItems.findIndex(item => item.id === afterId);
         if (insertAtIndex !== -1) {
             newItems.splice(insertAtIndex + 1, 0, newSlide);
         } else {
-             // Should not happen if an ID is provided, but as a fallback, add to end
-            newItems.push(newSlide);
+            newItems.push(newSlide); // Fallback: add to end
         }
     }
     setSlideItems(newItems);
+    internalUpdateRef.current = true;
     onMarkdownChange(newItems.map(item => item.content).join('\n---\n'));
   };
 
@@ -77,40 +99,18 @@ const VisualEditor: React.FC<VisualEditorProps> = ({ markdown, onMarkdownChange 
       return;
     }
 
-    const newItems = slideItems.filter(item => item.id !== idToDelete);
+    let newItems = slideItems.filter(item => item.id !== idToDelete);
 
     if (newItems.length === 0) {
-      // If all slides are deleted, create a new default slide
-      const defaultSlide: SlideItem = { id: generateUniqueId(), content: DEFAULT_NEW_SLIDE_CONTENT };
-      setSlideItems([defaultSlide]);
-      onMarkdownChange(defaultSlide.content); // Call with the content of the single default slide
-    } else {
-      setSlideItems(newItems);
-      onMarkdownChange(newItems.map(item => item.content).join('\n---\n'));
+      newItems = [{ id: generateUniqueId(), content: DEFAULT_NEW_SLIDE_CONTENT }];
     }
+    setSlideItems(newItems);
+    internalUpdateRef.current = true;
+    onMarkdownChange(newItems.map(item => item.content).join('\n---\n'));
   };
 
-  // This effect ensures that if the parent markdown becomes truly empty
-  // (e.g. parent explicitly sets it to ""), we reflect that by showing one default slide.
-  // And if it's populated from empty, it creates new IDs.
-  useEffect(() => {
-    if (markdown.trim() === "" && (slideItems.length > 1 || (slideItems.length === 1 && slideItems[0].content !== DEFAULT_NEW_SLIDE_CONTENT))) {
-      const newDefaultSlide = { id: generateUniqueId(), content: DEFAULT_NEW_SLIDE_CONTENT };
-      setSlideItems([newDefaultSlide]);
-      // Do not call onMarkdownChange here to avoid loops if parent is also reacting
-    } else if (markdown.trim() !== "" && slideItems.map(s => s.content).join("\n---\n") !== markdown) {
-      // This condition handles cases where markdown prop changes externally
-      // and is not just a reflection of internal state changes.
-      // It re-initializes slide IDs.
-       setSlideItems(markdown.split('\n---\n').map(content => ({
-        id: generateUniqueId(),
-        content,
-      })));
-    }
-  // Intentionally limit dependencies: only react to external `markdown` prop changes that are not caused by this component itself.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [markdown]);
-
+  // Removed the second useEffect that was causing confusion.
+  // The main useEffect depending on [markdownProp] is now the single source of truth for external changes.
 
   return (
     <Reorder.Group axis="y" values={slideItems} onReorder={handleReorder} className="space-y-4">

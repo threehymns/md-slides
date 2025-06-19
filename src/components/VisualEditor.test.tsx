@@ -202,4 +202,69 @@ describe('VisualEditor', () => {
     const expectedMarkdown = [itemsForReorder[1].content, itemsForReorder[0].content, itemsForReorder[2].content].join('\n---\n');
     expect(onMarkdownChangeMock).toHaveBeenCalledWith(expectedMarkdown);
   });
+
+  it('correctly re-parses when markdown prop changes externally', () => {
+    const { rerender } = render(<VisualEditor markdown={initialMarkdown} onMarkdownChange={onMarkdownChangeMock} />);
+    let textareas = screen.getAllByRole('textbox');
+    expect(textareas.length).toBe(initialSlideContents.length);
+
+    const newMarkdown = "New Slide 1\n---\nNew Slide 2";
+    const newSlideContents = newMarkdown.split('\n---\n');
+
+    act(() => {
+      rerender(<VisualEditor markdown={newMarkdown} onMarkdownChange={onMarkdownChangeMock} />);
+    });
+
+    textareas = screen.getAllByRole('textbox');
+    expect(textareas.length).toBe(newSlideContents.length);
+    newSlideContents.forEach((slideContent, index) => {
+      expect(textareas[index]).toHaveValue(slideContent);
+    });
+    // Check that onMarkdownChange was not called by this external update
+    expect(onMarkdownChangeMock).not.toHaveBeenCalled();
+  });
+
+  it('does not re-generate IDs on internal updates reflected back through props', () => {
+    const { rerender } = render(<VisualEditor markdown={initialMarkdown} onMarkdownChange={onMarkdownChangeMock} />);
+
+    // Get initial IDs (assuming the mock Reorder.Item sets data-testid correctly based on item.id)
+    const getSlideItemTestIds = () =>
+        screen.getAllByRole('textbox').map(ta => {
+            // Try to find the parent Reorder.Item mock to get its data-testid
+            let parent = ta.parentElement;
+            while(parent && !parent.dataset.testid?.startsWith('reorder-item-')) {
+                parent = parent.parentElement;
+            }
+            return parent?.dataset.testid;
+        }).filter(Boolean);
+
+    let initialItemTestIds = getSlideItemTestIds();
+    expect(initialItemTestIds.length).toBe(initialSlideContents.length);
+
+    // Simulate a text change (internal update)
+    const firstTextarea = screen.getAllByRole('textbox')[0];
+    const newTextForFirstSlide = "Slide 1 Modified";
+    act(() => {
+      fireEvent.change(firstTextarea, { target: { value: newTextForFirstSlide } });
+    });
+
+    // onMarkdownChangeMock should have been called.
+    expect(onMarkdownChangeMock).toHaveBeenCalledTimes(1);
+    const markdownAfterEdit = onMarkdownChangeMock.mock.calls[0][0];
+
+    // Simulate parent passing this exact markdown back as a prop
+    act(() => {
+      rerender(<VisualEditor markdown={markdownAfterEdit} onMarkdownChange={onMarkdownChangeMock} />);
+    });
+
+    // IDs should remain the same because internalUpdateRef.current should have been true
+    const newItemTestIds = getSlideItemTestIds();
+    expect(newItemTestIds).toEqual(initialItemTestIds);
+
+    // And the content should be updated
+    const textareasAfterRerender = screen.getAllByRole('textbox');
+    expect(textareasAfterRerender[0]).toHaveValue(newTextForFirstSlide);
+    expect(textareasAfterRerender.length).toBe(initialSlideContents.length); // Number of slides should be same
+  });
+
 });
