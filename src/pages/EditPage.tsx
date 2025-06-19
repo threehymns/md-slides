@@ -41,17 +41,19 @@ const EditPage = () => {
           {isVisualMode ? 'Switch to Markdown Editor' : 'Switch to Visual Editor'}
         </Button>
       </div>
-      {isVisualMode ? (
-        <VisualEditor
-          markdown={markdown}
-          onMarkdownChange={handleMarkdownChange}
-        />
-      ) : (
-        <MarkdownEditor
-          markdown={markdown}
-          onMarkdownChange={handleMarkdownChange}
-        />
-      )}
+      <div className="max-w-6xl mx-auto p-4">
+        {isVisualMode ? (
+          <VisualEditor
+            markdown={markdown}
+            onMarkdownChange={handleMarkdownChange}
+          />
+        ) : (
+          <MarkdownEditor
+            markdown={markdown}
+            onMarkdownChange={handleMarkdownChange}
+          />
+        )}
+      </div>
     </div>
   );
 };
