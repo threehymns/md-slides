@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { Reorder } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import TextareaAutosize from "react-textarea-autosize";
-import { PlusCircleIcon, XIcon } from "lucide-react"; // Import XIcon
+import { GripVertical, PlusCircleIcon, XIcon } from "lucide-react";
 
-const DEFAULT_NEW_SLIDE_CONTENT = "# New Slide\n\nEdit this content.";
+const DEFAULT_NEW_SLIDE_CONTENT = "";
 
 interface SlideItem {
   id: string;
@@ -18,6 +18,24 @@ interface VisualEditorProps {
 
 const generateUniqueId = (): string => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
+};
+
+// Helper function to remove exactly one leading/trailing newline sequence
+const trimOneNewline = (str: string): string => {
+  let result = str;
+  // Check and remove leading newline sequence
+  if (result.startsWith("\r\n")) {
+    result = result.substring(2);
+  } else if (result.startsWith("\n") || result.startsWith("\r")) {
+    result = result.substring(1);
+  }
+  // Check and remove trailing newline sequence
+  if (result.endsWith("\r\n")) {
+    result = result.substring(0, result.length - 2);
+  } else if (result.endsWith("\n") || result.endsWith("\r")) {
+    result = result.substring(0, result.length - 1);
+  }
+  return result;
 };
 
 const VisualEditor: React.FC<VisualEditorProps> = ({
@@ -39,9 +57,11 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
         // If markdownProp is empty, always initialize with one default slide
         return [{ id: generateUniqueId(), content: DEFAULT_NEW_SLIDE_CONTENT }];
       }
-      return md.split("\n---\n").map((content) => ({
+      // Split by '---' on its own line (standard markdown delimiter)
+      // Then remove exactly one leading/trailing newline from each slide content
+      return md.split(/\n---\n|\r\n---\r\n|\r---\r/).map((content) => ({
         id: generateUniqueId(),
-        content,
+        content: trimOneNewline(content),
       }));
     };
     setSlideItems(contentToSlides(markdownProp));
@@ -50,16 +70,72 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
   const handleReorder = (newOrder: SlideItem[]) => {
     setSlideItems(newOrder);
     internalUpdateRef.current = true;
-    onMarkdownChange(newOrder.map((item) => item.content).join("\n---\n"));
+    // Join with extra newlines to restore standard markdown format on save
+    onMarkdownChange(newOrder.map((item) => item.content).join("\n\n---\n\n"));
   };
 
   const handleTextChange = (id: string, newText: string) => {
-    const newItems = slideItems.map((item) =>
+    const slideIndex = slideItems.findIndex((item) => item.id === id);
+    if (slideIndex === -1) {
+      console.error(`Slide with id ${id} not found.`);
+      return;
+    }
+
+    // Update the content of the specific slide being edited immediately
+    const updatedItems = slideItems.map((item) =>
       item.id === id ? { ...item, content: newText } : item,
     );
-    setSlideItems(newItems);
-    internalUpdateRef.current = true;
-    onMarkdownChange(newItems.map((item) => item.content).join("\n---\n"));
+
+    // Use a regex that matches --- surrounded by newlines
+    const splitRegex = /\n---\n|\r\n---\r\n|\r---\r/;
+
+    // Check if the new text now contains the split delimiter
+    if (splitRegex.test(newText)) {
+      // If delimiter is found, split the slide's content and update state
+      const parts = newText.split(splitRegex);
+      const newSlides: SlideItem[] = [];
+
+      // The first part keeps the original slide's ID
+      // Apply trimOneNewline to clean up parts
+      newSlides.push({
+        id: slideItems[slideIndex].id,
+        content: trimOneNewline(parts[0] || DEFAULT_NEW_SLIDE_CONTENT),
+      });
+
+      // Subsequent parts become new slides with new IDs
+      for (let i = 1; i < parts.length; i++) {
+        newSlides.push({
+          id: generateUniqueId(),
+          content: trimOneNewline(parts[i] || DEFAULT_NEW_SLIDE_CONTENT),
+        });
+      }
+
+      // Construct the new slideItems array by replacing the old slide with the new ones
+      const newSlideItems = [
+        ...slideItems.slice(0, slideIndex), // slides before the edited one
+        ...newSlides, // the newly split slides
+        ...slideItems.slice(slideIndex + 1), // slides after the edited one
+      ];
+
+      setSlideItems(newSlideItems);
+
+      // Generate markdown from the potentially new structure
+      const newMarkdown = newSlideItems
+        .map((item) => item.content)
+        .join("\n---\n");
+      onMarkdownChange(newMarkdown);
+    } else {
+      // No split delimiter found, just update state with the content change
+      setSlideItems(updatedItems);
+
+      // Generate markdown from the updated items (single change)
+      const newMarkdown = updatedItems
+        .map((item) => item.content)
+        .join("\n---\n");
+      onMarkdownChange(newMarkdown);
+    }
+
+    internalUpdateRef.current = true; // Indicate internal update for the main useEffect
   };
 
   const handleAddSlide = (afterId: string | null) => {
@@ -103,7 +179,7 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
     }
     setSlideItems(newItems);
     internalUpdateRef.current = true;
-    onMarkdownChange(newItems.map((item) => item.content).join("\n---\n"));
+    onMarkdownChange(newItems.map((item) => item.content).join("\n\n---\n\n"));
   };
 
   const handleDeleteSlide = (idToDelete: string) => {
@@ -134,11 +210,8 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
     }
     setSlideItems(newItems);
     internalUpdateRef.current = true;
-    onMarkdownChange(newItems.map((item) => item.content).join("\n---\n"));
+    onMarkdownChange(newItems.map((item) => item.content).join("\n\n---\n\n"));
   };
-
-  // Removed the second useEffect that was causing confusion.
-  // The main useEffect depending on [markdownProp] is now the single source of truth for external changes.
 
   return (
     <Reorder.Group
@@ -148,28 +221,39 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
       className="w-full"
     >
       {" "}
-      {/* Removed space-y-4 for more precise control with adder */}
       {slideItems.map((item) => (
         <React.Fragment key={item.id}>
           <div className="relative group">
             {" "}
-            {/* Wrapper for Reorder.Item and its specific adder button */}
             <Reorder.Item
               value={item}
-              className="flex flex-col py-2 bg-transparent pt-10" // Adjusted pt-10 for new delete button size/pos
+              className="flex flex-row items-center py-2"
+              animate={{ scale: 1 }}
+              whileDrag={{ scale: 1.02 }}
             >
-              {/* The old actions bar div that contained the delete button is now removed */}
+              {/* Drag handle */}
+              <div className="cursor-grab text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-150 p-2 opacity-0 group-hover:opacity-100">
+                <GripVertical className="w-5 h-full" />
+              </div>
               <TextareaAutosize
                 value={item.content}
                 onChange={(e) => handleTextChange(item.id, e.target.value)}
-                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-primary text-sm bg-background"
+                className="w-full py-2 p-4 rounded-lg shadow focus:ring-2 focus:ring-border outline-none text-sm bg-card resize-none"
                 minRows={3}
+                placeholder="Write anything..."
               />
-              {/* Separator is part of the item, but only if not the last one conceptually (though adders are between) */}
-              {/* This hr might be redundant if adders provide enough visual separation or if we add it inside the adder div */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-4 -right-10 rounded-full text-muted-foreground hover:bg-destructive/20 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-20 w-8 h-8"
+                onClick={() => handleDeleteSlide(item.id)}
+                aria-label="Delete this slide"
+              >
+                <XIcon className="w-5 h-5" />{" "}
+              </Button>
             </Reorder.Item>
-            {/* Inter-slide adder: appears on hover of the Reorder.Item wrapper (group) */}
-            <div className="absolute inset-x-0 bottom-[-16px] h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10">
+            {/* Inter-slide adder */}
+            <div className="absolute inset-x-0 bottom-[-16px] h-8 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-150 z-10">
               <Button
                 variant="ghost"
                 aria-label="Add new slide after this"
@@ -180,22 +264,7 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
                 <PlusCircleIcon className="w-5 h-5" />
               </Button>
             </div>
-            {/* New Delete Button: top-right, appears on hover of the Reorder.Item wrapper (group) */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 rounded-full hover:bg-destructive/20 text-destructive opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-20 w-8 h-8" // Made consistent: w-8 h-8, top-2 right-2
-              onClick={() => handleDeleteSlide(item.id)}
-              aria-label="Delete this slide"
-            >
-              <XIcon className="w-5 h-5" />{" "}
-              {/* Icon size made consistent with PlusCircleIcon */}
-            </Button>
           </div>
-          {/* Separator between items */}
-          {item.id !== slideItems[slideItems.length - 1].id && (
-            <hr className="my-4 border-border" />
-          )}
         </React.Fragment>
       ))}
       {slideItems.length === 0 && (
