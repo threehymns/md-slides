@@ -14,6 +14,7 @@ interface PresentationsContextType {
   setCurrentPresentation: (id: string | null) => void;
   getCurrentPresentation: () => Presentation | null;
   reorderPresentations: (newOrder: Presentation[]) => void;
+  reorderSlideDecks: (newOrder: SlideDeck[]) => void;
   
   // Slide deck methods
   createSlideDeck: (title: string, content?: string) => SlideDeck;
@@ -148,6 +149,10 @@ export const PresentationsProvider: React.FC<{ children: React.ReactNode }> = ({
     setPresentations(newOrder);
   };
 
+  const reorderSlideDecks = (newOrder: SlideDeck[]) => {
+    setSlideDecks(newOrder);
+  };
+
   // Slide deck methods
   const createSlideDeck = (title: string, content: string = '') => {
     const newDeck: SlideDeck = {
@@ -255,6 +260,7 @@ export const PresentationsProvider: React.FC<{ children: React.ReactNode }> = ({
       setCurrentPresentation,
       getCurrentPresentation,
       reorderPresentations,
+      reorderSlideDecks,
       createSlideDeck,
       updateSlideDeck,
       deleteSlideDeck,

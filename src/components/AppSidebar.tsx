@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, FileText, GripVertical, Trash2, Edit, FolderOpen, Search, X } from 'lucide-react';
-import { motion, AnimatePresence, Reorder } from 'framer-motion';
+import { Plus, FileText, GripVertical, FolderOpen, Search } from 'lucide-react';
+import { AnimatePresence, Reorder } from 'framer-motion';
 import {
   Sidebar,
   SidebarContent,
@@ -11,43 +11,58 @@ import {
   SidebarGroupContent,
   SidebarMenu,
   SidebarMenuItem,
-  SidebarMenuButton,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { usePresentations } from '@/contexts/PresentationsContext';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Presentation, SlideDeck } from '@/types';
+import { EditableTitle, ActionButtons } from '@/components/common/EditableItem';
 
 interface DraggablePresentationProps {
-  presentation: any;
+  presentation: Presentation;
   isSelected: boolean;
   onSelect: () => void;
   onDelete: () => void;
   onRename: (newTitle: string) => void;
+  updateSlideDeck: (id: string, data: { title: string }) => void;
 }
 
-interface DraggableSlideDeckInPresentationProps {
-  deck: any;
-  presentationId: string;
+interface SlideDeckItemProps {
+  deck: SlideDeck;
   isSelected: boolean;
   onSelect: () => void;
-  onRemove: () => void;
-}
-
-interface DraggableSlideDeckProps {
-  deck: any;
-  isSelected: boolean;
-  onSelect: () => void;
-  onDelete: () => void;
   onRename: (newTitle: string) => void;
+  onDelete?: () => void; // For standalone decks
+  onRemove?: () => void; // For decks in presentations
+  isStandalone?: boolean; // To differentiate behavior/UI
 }
 
-const DraggableSlideDeckInPresentation: React.FC<DraggableSlideDeckInPresentationProps> = ({
+interface DraggedSlideDeckData {
+  type: 'slideDeck';
+  deckId: string;
+}
+
+const SlideDeckItem: React.FC<SlideDeckItemProps> = ({
   deck,
   isSelected,
   onSelect,
-  onRemove
+  onRename,
+  onDelete,
+  onRemove,
+  isStandalone = false,
 }) => {
+  const handleDragStart = (e: React.DragEvent) => {
+    if (isStandalone) {
+      e.dataTransfer.setData('application/json',
+        JSON.stringify({
+          type: 'slideDeck',
+          deckId: deck.id
+        })
+      );
+    }
+  };
+
   return (
     <Reorder.Item
       value={deck}
@@ -59,124 +74,34 @@ const DraggableSlideDeckInPresentation: React.FC<DraggableSlideDeckInPresentatio
       transition={{ duration: 0.2 }}
     >
       <div
-        className={`group/item flex items-center gap-2 p-2 ml-4 rounded-md cursor-pointer transition-colors ${
-          isSelected ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent/50'
-        }`}
+        className={`
+          group/item flex items-center gap-2 p-2
+          ${isStandalone ? '' : 'ml-4'} rounded-md
+          cursor-pointer transition-colors
+          ${isSelected ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent/50'}
+        `}
+        draggable={isStandalone} // Only draggable if standalone
+        onDragStart={handleDragStart}
         onClick={onSelect}
       >
         <GripVertical className="h-3 w-3 text-sidebar-foreground/10 group-hover/item:text-sidebar-foreground/50 cursor-grab" />
         <FileText className="h-3 w-3 text-sidebar-foreground/70" />
-        <div className="flex-1 min-w-0">
-          <span className="text-xs truncate">{deck.title}</span>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-5 w-5 p-0 text-destructive hover:text-destructive"
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove();
-          }}
-        >
-          <X className="h-2 w-2 opacity-0 group-hover/item:opacity-100" />
-        </Button>
+        <EditableTitle
+          initialTitle={deck.title}
+          onRename={onRename}
+          inputClassName="h-5 text-xs"
+          spanClassName="text-xs"
+        />
+        <ActionButtons
+          onEdit={() => { /* EditableTitle handles its own editing state */ }}
+          onDelete={onDelete}
+          onRemove={onRemove}
+          isStandalone={isStandalone}
+          buttonClassName="h-5 w-5 p-0"
+          iconClassName="h-2 w-2"
+        />
       </div>
     </Reorder.Item>
-  );
-};
-
-const DraggableSlideDeck: React.FC<DraggableSlideDeckProps> = ({
-  deck,
-  isSelected,
-  onSelect,
-  onDelete,
-  onRename
-}) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editTitle, setEditTitle] = useState(deck.title);
-
-  const handleRename = () => {
-    if (editTitle.trim()) {
-      onRename(editTitle.trim());
-    }
-    setIsEditing(false);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleRename();
-    } else if (e.key === 'Escape') {
-      setEditTitle(deck.title);
-      setIsEditing(false);
-    }
-  };
-
-  const handleDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData('application/json', JSON.stringify({
-      type: 'slideDeck',
-      deckId: deck.id
-    }));
-  };
-
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.2 }}
-    >
-      <div
-        className={`group/item flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors ${
-          isSelected ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent/50'
-        }`}
-        draggable
-        onDragStart={handleDragStart}
-        onClick={onSelect}
-      >
-        <GripVertical className="h-3 w-3 text-sidebar-foreground/10 group-hover/item:text-sidebar-foreground/50" />
-        <FileText className="h-3 w-3 text-sidebar-foreground/70" />
-        <div className="flex-1 min-w-0">
-          {isEditing ? (
-            <Input
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              onBlur={handleRename}
-              onKeyDown={handleKeyPress}
-              className="h-5 text-xs"
-              autoFocus
-              onClick={(e) => e.stopPropagation()}
-            />
-          ) : (
-            <span className="text-xs truncate">{deck.title}</span>
-          )}
-        </div>
-        <div className="opacity-0 flex gap-1 group-hover/item:opacity-100">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-5 w-5 p-0"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsEditing(true);
-            }}
-          >
-            <Edit className="h-2 w-2" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-5 w-5 p-0 text-destructive hover:text-destructive"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-          >
-            <Trash2 className="h-2 w-2" />
-          </Button>
-        </div>
-      </div>
-    </motion.div>
   );
 };
 
@@ -185,8 +110,9 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
   isSelected,
   onSelect,
   onDelete,
-  onRename
-}: DraggablePresentationProps) => {
+  onRename,
+  updateSlideDeck
+}) => {
   const navigate = useNavigate();
   const {
     currentSlideDeckId,
@@ -197,8 +123,6 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
     addSlideDeckToPresentation
   } = usePresentations();
   
-  const [isEditing, setIsEditing] = useState(false);
-  const [editTitle, setEditTitle] = useState(presentation.title);
   const [isOpen, setIsOpen] = useState(isSelected);
 
   const presentationSlideDecks = getPresentationSlideDecks(presentation.id);
@@ -207,23 +131,7 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
     setIsOpen(isSelected);
   }, [isSelected]);
 
-  const handleRename = () => {
-    if (editTitle.trim()) {
-      onRename(editTitle.trim());
-    }
-    setIsEditing(false);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleRename();
-    } else if (e.key === 'Escape') {
-      setEditTitle(presentation.title);
-      setIsEditing(false);
-    }
-  };
-
-  const handleReorderDecks = (newDecks: any[]) => {
+  const handleReorderDecks = (newDecks: SlideDeck[]) => {
     reorderSlideDecksInPresentation(presentation.id, newDecks);
   };
 
@@ -235,7 +143,7 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
     e.preventDefault();
     e.stopPropagation();
     try {
-      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      const data: DraggedSlideDeckData = JSON.parse(e.dataTransfer.getData('application/json'));
       if (data.type === 'slideDeck' && data.deckId) {
         addSlideDeckToPresentation(presentation.id, data.deckId);
       }
@@ -259,9 +167,11 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
     >
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <div
-          className={`group/item flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors ${
-            isSelected ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent/50'
-          }`}
+          className={`
+            group/item flex items-center gap-2 p-2
+            rounded-md cursor-pointer transition-colors
+            ${isSelected ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent/50'}
+          `}
           onClick={onSelect}
         >
           <GripVertical className="h-4 w-4 text-sidebar-foreground/10 group-hover/item:text-sidebar-foreground/50 cursor-grab" />
@@ -270,70 +180,47 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
               <FolderOpen className="h-4 w-4 text-sidebar-foreground/70" />
             </Button>
           </CollapsibleTrigger>
-          <div className="flex-1 min-w-0">
-            {isEditing ? (
-              <Input
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                onBlur={handleRename}
-                onKeyDown={handleKeyPress}
-                className="h-6 text-xs"
-                autoFocus
-                onClick={(e) => e.stopPropagation()}
-              />
-            ) : (
-              <span className="text-sm truncate">{presentation.title}</span>
-            )}
-          </div>
-          <div className="opacity-0 flex gap-1 group-hover/item:opacity-100">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsEditing(true);
-              }}
-            >
-              <Edit className="h-3 w-3" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
-          </div>
+          <EditableTitle
+            initialTitle={presentation.title}
+            onRename={onRename}
+            inputClassName="h-6 text-xs"
+            spanClassName="text-sm"
+          />
+          <ActionButtons
+            onEdit={() => { /* EditableTitle handles its own editing state */ }}
+            onDelete={onDelete}
+            buttonClassName="h-6 w-6 p-0"
+            iconClassName="h-3 w-3"
+            isStandalone={true} // Presentations are always standalone in this context for delete button
+          />
         </div>
-        <CollapsibleContent 
-          className="space-y-1 pt-1"
+        <CollapsibleContent
           onDragOver={handlePresentationDragOver}
           onDrop={handlePresentationDrop}
         >
-          <Reorder.Group axis="y" values={presentationSlideDecks} onReorder={handleReorderDecks}>
+          <Reorder.Group axis="y" values={presentationSlideDecks} onReorder={handleReorderDecks} className="space-y-1 pt-1">
             <AnimatePresence>
-              {presentationSlideDecks.map((deck: any) => (
-                <DraggableSlideDeckInPresentation
+              {presentationSlideDecks.map((deck: SlideDeck) => (
+                <SlideDeckItem
                   key={deck.id}
                   deck={deck}
-                  presentationId={presentation.id}
                   isSelected={currentSlideDeckId === deck.id}
                   onSelect={() => {
                     setCurrentSlideDeck(deck.id);
                     navigate(`/edit`);
                   }}
                   onRemove={() => removeSlideDeckFromPresentation(presentation.id, deck.id)}
+                  isStandalone={false}
+                  onRename={(newTitle) => updateSlideDeck(deck.id, { title: newTitle })}
                 />
               ))}
             </AnimatePresence>
           </Reorder.Group>
           {presentationSlideDecks.length === 0 && (
-            <div className="text-xs text-sidebar-foreground/60 p-2 ml-4 text-center">
+            <div className="
+              text-xs text-sidebar-foreground/60
+              p-2 ml-4 text-center
+            ">
               Drop slide decks here
             </div>
           )}
@@ -355,6 +242,8 @@ export function AppSidebar() {
     setCurrentPresentation,
     updatePresentation,
     reorderPresentations,
+    reorderSlideDecks,
+    reorderSlideDecksInPresentation,
     createSlideDeck,
     deleteSlideDeck,
     setCurrentSlideDeck,
@@ -363,7 +252,7 @@ export function AppSidebar() {
   
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredSlideDecks = slideDecks.filter(deck => 
+  const filteredSlideDecks = slideDecks.filter(deck =>
     deck.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -377,7 +266,7 @@ export function AppSidebar() {
     createSlideDeck(title);
   };
 
-  const handleReorderPresentations = (newOrder: any[]) => {
+  const handleReorderPresentations = (newOrder: Presentation[]) => {
     reorderPresentations(newOrder);
   };
 
@@ -422,6 +311,7 @@ export function AppSidebar() {
                       }}
                       onDelete={() => deletePresentation(presentation.id)}
                       onRename={(newTitle) => updatePresentation(presentation.id, { title: newTitle })}
+                      updateSlideDeck={updateSlideDeck}
                     />
                   ))}
                 </AnimatePresence>
@@ -459,21 +349,38 @@ export function AppSidebar() {
                 className="pl-7 h-7 text-xs"
               />
             </div>
-            <div className="space-y-1 max-h-64 overflow-y-auto">
-              <AnimatePresence>
-                {filteredSlideDecks.map((deck) => (
-                  <DraggableSlideDeck
-                    key={deck.id}
-                    deck={deck}
-                    isSelected={currentSlideDeckId === deck.id}
-                    onSelect={() => handleSlideDeckSelect(deck.id)}
-                    onDelete={() => deleteSlideDeck(deck.id)}
-                    onRename={(newTitle) => updateSlideDeck(deck.id, { title: newTitle })}
-                  />
-                ))}
-              </AnimatePresence>
+            <div className="max-h-64 overflow-y-auto">
+              <Reorder.Group
+                className="space-y-1"
+                axis="y"
+                values={filteredSlideDecks}
+                onReorder={(newOrder: SlideDeck[]) => {
+                  if (currentPresentationId) {
+                    reorderSlideDecksInPresentation(currentPresentationId, newOrder);
+                  } else {
+                    reorderSlideDecks(newOrder);
+                  }
+                }}
+              >
+                <AnimatePresence>
+                  {filteredSlideDecks.map((deck) => (
+                    <SlideDeckItem
+                      key={deck.id}
+                      deck={deck}
+                      isSelected={currentSlideDeckId === deck.id}
+                      onSelect={() => handleSlideDeckSelect(deck.id)}
+                      onDelete={() => deleteSlideDeck(deck.id)}
+                      onRename={(newTitle) => updateSlideDeck(deck.id, { title: newTitle })}
+                      isStandalone={true}
+                    />
+                  ))}
+                </AnimatePresence>
+              </Reorder.Group>
               {filteredSlideDecks.length === 0 && slideDecks.length > 0 && (
-                <div className="text-xs text-sidebar-foreground/60 p-2 text-center">
+                <div className="
+                  text-xs text-sidebar-foreground/60
+                  p-2 text-center
+                ">
                   No matching slide decks
                 </div>
               )}
