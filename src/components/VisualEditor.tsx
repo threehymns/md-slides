@@ -3,6 +3,8 @@ import { Reorder } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import TextareaAutosize from "react-textarea-autosize";
 import { GripVertical, PlusCircleIcon, XIcon } from "lucide-react";
+// Import necessary types from context
+import { SlideDeck } from "@/types";
 
 const DEFAULT_NEW_SLIDE_CONTENT = "";
 
@@ -12,8 +14,10 @@ interface SlideItem {
 }
 
 interface VisualEditorProps {
-  markdown: string;
-  onMarkdownChange: (markdown: string) => void;
+  markdown: string; // This prop is still needed for the initial state based on the deck content
+  onMarkdownChange: (markdown: string) => void; // This prop is still needed to notify the parent of content changes
+  // Only keep currentDeck for disabling elements within the editor
+  currentDeck: SlideDeck | undefined;
 }
 
 const generateUniqueId = (): string => {
@@ -38,9 +42,24 @@ const trimOneNewline = (str: string): string => {
   return result;
 };
 
+const contentToSlides = (md: string): SlideItem[] => {
+  if (md.trim() === "") {
+    // If markdownProp is empty, always initialize with one default slide
+    return [{ id: generateUniqueId(), content: DEFAULT_NEW_SLIDE_CONTENT }];
+  }
+  // Split by '---' on its own line (standard markdown delimiter)
+  // Then remove exactly one leading/trailing newline from each slide content
+  return md.split(/\n---\n|\r\n---\r\n|\r---\r/).map((content) => ({
+    id: generateUniqueId(),
+    content: trimOneNewline(content),
+  }));
+};
+
 const VisualEditor: React.FC<VisualEditorProps> = ({
   markdown: markdownProp,
   onMarkdownChange,
+  // Destructure only required props
+  currentDeck,
 }) => {
   const [slideItems, setSlideItems] = useState<SlideItem[]>([]);
   const internalUpdateRef = useRef(false);
@@ -52,39 +71,32 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
       return;
     }
 
-    const contentToSlides = (md: string): SlideItem[] => {
-      if (md.trim() === "") {
-        // If markdownProp is empty, always initialize with one default slide
-        return [{ id: generateUniqueId(), content: DEFAULT_NEW_SLIDE_CONTENT }];
-      }
-      // Split by '---' on its own line (standard markdown delimiter)
-      // Then remove exactly one leading/trailing newline from each slide content
-      return md.split(/\n---\n|\r\n---\r\n|\r---\r/).map((content) => ({
-        id: generateUniqueId(),
-        content: trimOneNewline(content),
-      }));
-    };
-    setSlideItems(contentToSlides(markdownProp));
-  }, [markdownProp]);
+    // Only initialize or update slides if a deck is selected
+    if (currentDeck) {
+      setSlideItems(contentToSlides(markdownProp));
+    } else {
+      // Clear slides if no deck is selected
+      setSlideItems([]);
+    }
+  }, [markdownProp, currentDeck]); // Depend on markdownProp and currentDeck
 
   const handleReorder = (newOrder: SlideItem[]) => {
+    if (!currentDeck) return; // Prevent reordering if no deck is selected
     setSlideItems(newOrder);
     internalUpdateRef.current = true;
     // Join with extra newlines to restore standard markdown format on save
+    // The parent (EditPage) is responsible for calling updateSlideDeck
     onMarkdownChange(newOrder.map((item) => item.content).join("\n\n---\n\n"));
   };
 
   const handleTextChange = (id: string, newText: string) => {
+    if (!currentDeck) return; // Prevent changes if no deck is selected
+
     const slideIndex = slideItems.findIndex((item) => item.id === id);
     if (slideIndex === -1) {
       console.error(`Slide with id ${id} not found.`);
       return;
     }
-
-    // Update the content of the specific slide being edited immediately
-    const updatedItems = slideItems.map((item) =>
-      item.id === id ? { ...item, content: newText } : item,
-    );
 
     // Use a regex that matches --- surrounded by newlines
     const splitRegex = /\n---\n|\r\n---\r\n|\r---\r/;
@@ -123,15 +135,20 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
       const newMarkdown = newSlideItems
         .map((item) => item.content)
         .join("\n---\n");
+      // Notify parent of the change
       onMarkdownChange(newMarkdown);
     } else {
       // No split delimiter found, just update state with the content change
+      const updatedItems = slideItems.map((item) =>
+        item.id === id ? { ...item, content: newText } : item,
+      );
       setSlideItems(updatedItems);
 
       // Generate markdown from the updated items (single change)
       const newMarkdown = updatedItems
         .map((item) => item.content)
         .join("\n---\n");
+      // Notify parent of the change
       onMarkdownChange(newMarkdown);
     }
 
@@ -139,6 +156,8 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
   };
 
   const handleAddSlide = (afterId: string | null) => {
+    if (!currentDeck) return; // Prevent adding if no deck is selected
+
     const newSlide: SlideItem = {
       id: generateUniqueId(),
       content: DEFAULT_NEW_SLIDE_CONTENT,
@@ -179,10 +198,13 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
     }
     setSlideItems(newItems);
     internalUpdateRef.current = true;
+    // Notify parent of the change
     onMarkdownChange(newItems.map((item) => item.content).join("\n\n---\n\n"));
   };
 
   const handleDeleteSlide = (idToDelete: string) => {
+    if (!currentDeck) return; // Prevent deletion if no deck is selected
+
     const itemToDelete = slideItems.find((item) => item.id === idToDelete);
     if (!itemToDelete) return;
 
@@ -210,6 +232,7 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
     }
     setSlideItems(newItems);
     internalUpdateRef.current = true;
+    // Notify parent of the change
     onMarkdownChange(newItems.map((item) => item.content).join("\n\n---\n\n"));
   };
 
@@ -230,9 +253,13 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
               className="flex flex-row items-center py-2"
               animate={{ scale: 1 }}
               whileDrag={{ scale: 1.02 }}
+              // Disable dragging if no deck is selected
+              dragConstraints={currentDeck ? {} : false}
             >
               {/* Drag handle */}
-              <div className="cursor-grab text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-150 p-2 opacity-0 group-hover:opacity-100">
+              <div
+                className={`cursor-grab text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-150 p-4 absolute -left-12 top-0 bottom-0 ${currentDeck ? "opacity-0 group-hover:opacity-100" : "opacity-0"}`}
+              >
                 <GripVertical className="w-5 h-full" />
               </div>
               <TextareaAutosize
@@ -240,26 +267,35 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
                 onChange={(e) => handleTextChange(item.id, e.target.value)}
                 className="w-full py-2 p-4 rounded-lg shadow focus:ring-2 focus:ring-border outline-none text-sm bg-card resize-none"
                 minRows={3}
-                placeholder="Write anything..."
+                placeholder={
+                  currentDeck
+                    ? "Write anything..."
+                    : "Select a slide deck to edit"
+                }
+                disabled={!currentDeck} // Disable if no deck is selected
               />
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute top-4 -right-10 rounded-full text-muted-foreground hover:bg-destructive/20 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-20 w-8 h-8"
+                className={`absolute top-4 -right-10 rounded-full text-muted-foreground hover:bg-destructive/20 hover:text-destructive transition-opacity duration-150 z-20 w-8 h-8 ${currentDeck ? "opacity-0 group-hover:opacity-100" : "opacity-0"}`}
                 onClick={() => handleDeleteSlide(item.id)}
                 aria-label="Delete this slide"
+                disabled={!currentDeck} // Disable if no deck is selected
               >
                 <XIcon className="w-5 h-5" />{" "}
               </Button>
             </Reorder.Item>
             {/* Inter-slide adder */}
-            <div className="absolute inset-x-0 bottom-[-16px] h-8 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-150 z-10">
+            <div
+              className={`absolute inset-x-0 bottom-[-16px] h-8 flex items-center justify-center transition-opacity duration-150 z-10 ${currentDeck ? "opacity-0 hover:opacity-100" : "opacity-0"}`}
+            >
               <Button
                 variant="ghost"
                 aria-label="Add new slide after this"
                 size="icon"
                 className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 w-8 h-8"
                 onClick={() => handleAddSlide(item.id)}
+                disabled={!currentDeck} // Disable if no deck is selected
               >
                 <PlusCircleIcon className="w-5 h-5" />
               </Button>
@@ -267,16 +303,26 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
           </div>
         </React.Fragment>
       ))}
-      {slideItems.length === 0 && (
+      {/* Show "Add First Slide" button only if a deck is selected AND slideItems is empty */}
+      {currentDeck && slideItems.length === 0 && (
         <div className="text-center py-10">
           <p className="mb-4 text-muted-foreground">
             The editor is currently empty.
           </p>
+
           <Button
             onClick={() => handleAddSlide(null)} // Add a first slide
           >
             Add First Slide
           </Button>
+        </div>
+      )}
+      {/* Show "Select a slide deck" message if no deck is selected */}
+      {!currentDeck && (
+        <div className="text-center py-10">
+          <p className="mb-4 text-muted-foreground">
+            Select a slide deck to start editing.
+          </p>
         </div>
       )}
     </Reorder.Group>

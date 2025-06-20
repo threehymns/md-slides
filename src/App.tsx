@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,7 +23,7 @@ const App = () => (
         <PresentationsProvider>
           <BrowserRouter>
             <SidebarProvider>
-              <div className="min-h-screen flex w-full">
+              <div className="flex w-full">
                 <Routes>
                   <Route element={<MainLayout />}>
                     <Route path="/" element={<Index />} />

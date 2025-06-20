@@ -1,12 +1,12 @@
-import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
-import { AppSidebar } from '@/components/AppSidebar';
-import { Outlet, useOutlet, useNavigate } from 'react-router-dom';
-import React, { ReactNode, useState, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Play, Settings as SettingsIcon } from 'lucide-react';
-import { usePresentations } from '@/contexts/PresentationsContext';
-import Settings from '@/components/Settings';
-import { AppSettings } from '@/types';
+import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
+import { Outlet, useOutlet, useNavigate } from "react-router-dom";
+import React, { ReactNode, useState, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Play, Settings as SettingsIcon } from "lucide-react";
+import { usePresentations } from "@/contexts/PresentationsContext";
+import Settings from "@/components/Settings";
+import { AppSettings } from "@/types";
 
 type MainLayoutProps = {
   children?: ReactNode;
@@ -14,10 +14,7 @@ type MainLayoutProps = {
 
 const MainLayout = ({ children }: MainLayoutProps) => {
   const navigate = useNavigate();
-  const {
-    getCurrentPresentation,
-    updatePresentation,
-  } = usePresentations();
+  const { getCurrentPresentation, updatePresentation } = usePresentations();
   const outlet = useOutlet();
   const currentPresentation = getCurrentPresentation();
 
@@ -28,10 +25,10 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     showNavigationHint: true,
     autoHideControls: false,
     style: {
-      fontFamily: 'system-ui, sans-serif',
+      fontFamily: "system-ui, sans-serif",
       fontSize: 5,
       lineHeight: 1.6,
-      textAlign: 'center',
+      textAlign: "center",
     },
   });
 
@@ -46,7 +43,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   };
 
   const handleStartPresentation = () => {
-    navigate('/present');
+    navigate("/present");
   };
 
   const handleOpenSettings = () => {
@@ -67,7 +64,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
                 className="px-2 rounded w-full text-lg font-semibold bg-transparent focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 placeholder="Presentation title..."
               />
-              
+
               <Button
                 onClick={handleStartPresentation}
                 size="sm"
@@ -78,7 +75,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
               </Button>
             </div>
           )}
-          
+
           <Button
             variant="outline"
             size="icon"
@@ -88,7 +85,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
             <SettingsIcon className="h-4 w-4" />
           </Button>
         </div>
-        <div className="h-[calc(100vh-41px)] overflow-y-auto">
+        <div className="h-[calc(100vh-61px)] overflow-y-auto">
           {children || outlet}
         </div>
       </SidebarInset>
