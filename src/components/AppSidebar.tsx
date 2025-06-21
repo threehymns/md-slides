@@ -56,6 +56,8 @@ const SlideDeckItem: React.FC<SlideDeckItemProps> = ({
   onRemove,
   isStandalone = false,
 }) => {
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+
   const handleDragStart = (e: React.DragEvent) => {
     if (isStandalone) {
       e.dataTransfer.setData(
@@ -97,13 +99,14 @@ const SlideDeckItem: React.FC<SlideDeckItemProps> = ({
           onRename={onRename}
           inputClassName="h-5 text-xs"
           spanClassName="text-xs"
+          isEditingExternally={isEditingTitle}
+          onStopEditing={() => setIsEditingTitle(false)}
         />
         <ActionButtons
-          onEdit={() => {
-            /* EditableTitle handles its own editing state */
-          }}
+          onEdit={() => setIsEditingTitle(true)}
           onDelete={onDelete}
           onRemove={onRemove}
+          isEditing={isEditingTitle}
           isStandalone={isStandalone}
           buttonClassName="h-5 w-5 p-0"
           iconClassName="h-2 w-2"
@@ -131,6 +134,7 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
     addSlideDeckToPresentation,
   } = usePresentations();
 
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isOpen, setIsOpen] = useState(isSelected);
 
   const presentationSlideDecks = getPresentationSlideDecks(presentation.id);
@@ -197,13 +201,14 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
             onRename={onRename}
             inputClassName="h-6 text-xs"
             spanClassName="text-sm"
+            isEditingExternally={isEditingTitle}
+            onStopEditing={() => setIsEditingTitle(false)}
           />
           <ActionButtons
-            onEdit={() => {
-              /* EditableTitle handles its own editing state */
-            }}
+            onEdit={() => setIsEditingTitle(true)}
             onDelete={onDelete}
             buttonClassName="h-6 w-6 p-0"
+            isEditing={isEditingTitle}
             iconClassName="h-3 w-3"
             isStandalone={true} // Presentations are always standalone in this context for delete button
           />
