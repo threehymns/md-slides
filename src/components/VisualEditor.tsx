@@ -150,7 +150,7 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
       return;
     }
 
-    const splitRegex = /\n---\n|\r\n---\r\n|\r---\r/;
+    const splitRegex = /(?:\r?\n){1,2}---(?:\r?\n){1,2}/;
 
     if (splitRegex.test(newText)) {
       // Delegate splitting logic
