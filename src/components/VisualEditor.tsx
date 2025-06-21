@@ -292,7 +292,7 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
         setSlideItems(newSlideItems);
         internalUpdateRef.current = true;
         onMarkdownChange(
-          newSlideItems.map((item) => item.content).join("\n\n----\n\n"),
+          newSlideItems.map((item) => item.content).join("\n\n---\n\n"),
         );
 
         // Set state to trigger focus and cursor position update in the effect
