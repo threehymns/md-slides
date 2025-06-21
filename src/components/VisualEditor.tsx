@@ -112,6 +112,34 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
     onMarkdownChange(newOrder.map((item) => item.content).join("\n\n---\n\n"));
   };
 
+  // Extracted slide‐splitting logic for clarity
+  const splitSlideContent = (slideIndex: number, newText: string) => {
+    const splitRegex = /\n---\n|\r\n---\r\n|\r---\r/;
+    const parts = newText.split(splitRegex);
+    const newSlides: SlideItem[] = [];
+
+    // The first part keeps the original slide's ID
+    newSlides.push({
+      id: slideItems[slideIndex].id,
+      content: trimOneNewline(parts[0] || DEFAULT_NEW_SLIDE_CONTENT),
+    });
+
+    // Subsequent parts become new slides with new IDs
+    for (let i = 1; i < parts.length; i++) {
+      newSlides.push({
+        id: generateUniqueId(),
+        content: trimOneNewline(parts[i] || DEFAULT_NEW_SLIDE_CONTENT),
+      });
+    }
+
+    // Reconstruct the full list, replacing the one slide with the split slides
+    return [
+      ...slideItems.slice(0, slideIndex),
+      ...newSlides,
+      ...slideItems.slice(slideIndex + 1),
+    ];
+  };
+
   const handleTextChange = (id: string, newText: string) => {
     if (!currentDeck) return; // Prevent changes if no deck is selected
 
@@ -121,57 +149,24 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
       return;
     }
 
-    // Use a regex that matches --- surrounded by newlines
     const splitRegex = /\n---\n|\r\n---\r\n|\r---\r/;
 
-    // Check if the new text now contains the split delimiter
     if (splitRegex.test(newText)) {
-      // If delimiter is found, split the slide's content and update state
-      const parts = newText.split(splitRegex);
-      const newSlides: SlideItem[] = [];
-
-      // The first part keeps the original slide's ID
-      // Apply trimOneNewline to clean up parts
-      newSlides.push({
-        id: slideItems[slideIndex].id,
-        content: trimOneNewline(parts[0] || DEFAULT_NEW_SLIDE_CONTENT),
-      });
-
-      // Subsequent parts become new slides with new IDs
-      for (let i = 1; i < parts.length; i++) {
-        newSlides.push({
-          id: generateUniqueId(),
-          content: trimOneNewline(parts[i] || DEFAULT_NEW_SLIDE_CONTENT),
-        });
-      }
-
-      // Construct the new slideItems array by replacing the old slide with the new ones
-      const newSlideItems = [
-        ...slideItems.slice(0, slideIndex), // slides before the edited one
-        ...newSlides, // the newly split slides
-        ...slideItems.slice(slideIndex + 1), // slides after the edited one
-      ];
-
+      // Delegate splitting logic
+      const newSlideItems = splitSlideContent(slideIndex, newText);
       setSlideItems(newSlideItems);
-
-      // Generate markdown from the potentially new structure
-      const newMarkdown = newSlideItems
-        .map((item) => item.content)
-        .join("\n---\n");
-      // Notify parent of the change
-      onMarkdownChange(newMarkdown);
+      onMarkdownChange(
+        newSlideItems.map((item) => item.content).join("\n\n---\n\n")
+      );
     } else {
-      // No split delimiter found, just update state with the content change
+      // Regular text update
       const updatedItems = slideItems.map((item) =>
-        item.id === id ? { ...item, content: newText } : item,
+        item.id === id ? { ...item, content: newText } : item
       );
       setSlideItems(updatedItems);
-
-      // Generate markdown from the updated items (single change)
       const newMarkdown = updatedItems
         .map((item) => item.content)
         .join("\n---\n");
-      // Notify parent of the change
       onMarkdownChange(newMarkdown);
     }
 
