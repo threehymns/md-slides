@@ -370,8 +370,18 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
 
       const currentSlide = slideItems[slideIndex];
       const content = currentSlide.content;
-      const contentBeforeCursor = content.substring(0, cursorPosition);
-      const contentAfterCursor = content.substring(cursorPosition);
+      let contentBeforeCursor = content.substring(0, cursorPosition);
+      let contentAfterCursor = content.substring(cursorPosition);
+
+      // Trim trailing newline from the first part if the split point was just after a newline
+      if (cursorPosition > 0 && content[cursorPosition - 1] === "\n") {
+        contentBeforeCursor = contentBeforeCursor.slice(0, -1);
+      }
+
+      // Trim leading newline from the second part if the split point was just before a newline
+      if (cursorPosition < content.length && content[cursorPosition] === "\n") {
+        contentAfterCursor = contentAfterCursor.slice(1);
+      }
 
       // Update current slide content
       const updatedCurrentSlide = {
