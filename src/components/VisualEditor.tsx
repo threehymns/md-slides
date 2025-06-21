@@ -49,7 +49,7 @@ const contentToSlides = (md: string): SlideItem[] => {
   }
   // Split by '---' on its own line (standard markdown delimiter)
   // Then remove exactly one leading/trailing newline from each slide content
-  return md.split(/\n---\n|\r\n---\r\n|\r---\r/).map((content) => ({
+  return md.split(/(?:\r?\n){1,2}---(?:\r?\n){1,2}/).map((content) => ({
     id: generateUniqueId(),
     content: trimOneNewline(content),
   }));
@@ -114,7 +114,7 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
 
   // Extracted slide‐splitting logic for clarity
   const splitSlideContent = (slideIndex: number, newText: string) => {
-    const splitRegex = /\n---\n|\r\n---\r\n|\r---\r/;
+    const splitRegex = /(?:\r?\n){1,2}---(?:\r?\n){1,2}/;
     const parts = newText.split(splitRegex);
     const newSlides: SlideItem[] = [];
 
@@ -166,7 +166,7 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
       setSlideItems(updatedItems);
       const newMarkdown = updatedItems
         .map((item) => item.content)
-        .join("\n---\n");
+        .join("\n\n---\n\n");
       onMarkdownChange(newMarkdown);
     }
 
