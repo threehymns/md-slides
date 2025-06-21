@@ -18,6 +18,7 @@ interface VisualEditorProps {
   onMarkdownChange: (markdown: string) => void; // This prop is still needed to notify the parent of content changes
   // Only keep currentDeck for disabling elements within the editor
   currentDeck: SlideDeck | undefined;
+  showSlideNumbers: boolean; // New prop to control slide number visibility
 }
 
 const generateUniqueId = (): string => {
@@ -58,7 +59,7 @@ const contentToSlides = (md: string): SlideItem[] => {
 const VisualEditor: React.FC<VisualEditorProps> = ({
   markdown: markdownProp,
   onMarkdownChange,
-  // Destructure only required props
+  showSlideNumbers,
   currentDeck,
 }) => {
   const [slideItems, setSlideItems] = useState<SlideItem[]>([]);
@@ -432,7 +433,17 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
               <div
                 className={`cursor-grab text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-150 p-4 absolute -left-12 top-0 bottom-0 ${currentDeck ? "opacity-0 group-hover:opacity-100" : "opacity-0"}`}
               >
-                <GripVertical className="w-5 h-full" />
+                {/* Conditionally render Slide number - absolute position at top */}
+                {showSlideNumbers && (
+                  <div className="absolute top-2 left-0 right-0 text-center text-xs pt-1">
+                    {slideItems.findIndex((item_) => item_.id === item.id) + 1}
+                  </div>
+                )}
+                {/* Container for centering GripVertical */}
+                <div className="flex flex-col items-center justify-center h-full w-full relative">
+                  {/* Drag handle icon - centered */}
+                  <GripVertical className="w-5" />
+                </div>
               </div>
               <TextareaAutosize
                 ref={(el) => (textareaRefs.current[item.id] = el)} // Assign ref

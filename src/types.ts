@@ -1,16 +1,15 @@
-
 export interface SlideDeck {
   id: string;
   title: string;
   content: string;
   background?: string;
-  mediaType?: 'image' | 'video';
+  mediaType?: "image" | "video";
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface Presentation {
-  id:string;
+  id: string;
   title: string;
   slideDeckIds: string[];
   createdAt: Date;
@@ -22,11 +21,12 @@ export interface AppSettings {
   showSlideCounter: boolean;
   showNavigationHint: boolean;
   autoHideControls: boolean;
+  showSlideNumbers: boolean;
   style: {
     fontFamily: string;
     fontSize: number;
     lineHeight: number;
-    textAlign: 'left' | 'center' | 'right' | 'justify';
+    textAlign: "left" | "center" | "right" | "justify";
     textColor?: string;
     backgroundColor?: string;
   };
@@ -35,5 +35,5 @@ export interface AppSettings {
 export interface SlideInfo {
   html: string;
   background?: string;
-  mediaType?: 'image' | 'video';
+  mediaType?: "image" | "video";
 }
