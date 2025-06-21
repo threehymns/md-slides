@@ -156,12 +156,12 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
       const newSlideItems = splitSlideContent(slideIndex, newText);
       setSlideItems(newSlideItems);
       onMarkdownChange(
-        newSlideItems.map((item) => item.content).join("\n\n---\n\n")
+        newSlideItems.map((item) => item.content).join("\n\n---\n\n"),
       );
     } else {
       // Regular text update
       const updatedItems = slideItems.map((item) =>
-        item.id === id ? { ...item, content: newText } : item
+        item.id === id ? { ...item, content: newText } : item,
       );
       setSlideItems(updatedItems);
       const newMarkdown = updatedItems
@@ -245,6 +245,73 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
     onMarkdownChange(newItems.map((item) => item.content).join("\n\n---\n\n"));
   };
 
+  const handleBackspaceAtBeginning = (slideIndex: number) => {
+    if (slideIndex === 0) return false;
+
+    const previousSlide = slideItems[slideIndex - 1];
+    const currentSlide = slideItems[slideIndex];
+    const mergedContent = previousSlide.content + "\n" + currentSlide.content;
+
+    const newSlideItems = slideItems
+      .map((item, index) => {
+        if (index === slideIndex - 1) {
+          return { ...item, content: mergedContent };
+        }
+        return index !== slideIndex ? item : null;
+      })
+      .filter((item) => item !== null) as SlideItem[];
+
+    const cursorPosition = previousSlide.content.length + 1;
+
+    setSlideItems(newSlideItems);
+    internalUpdateRef.current = true;
+    onMarkdownChange(
+      newSlideItems.map((item) => item.content).join("\n\n---\n\n"),
+    );
+
+    setFocusAfterAction({
+      id: previousSlide.id,
+      position: cursorPosition,
+    });
+
+    return true;
+  };
+
+  const handleArrowNavigation = (
+    key: string,
+    slideIndex: number,
+    isAtBeginning: boolean,
+    isAtEnd: boolean,
+  ) => {
+    if (
+      (key === "ArrowUp" || key === "ArrowLeft") &&
+      isAtBeginning &&
+      slideIndex > 0
+    ) {
+      const previousSlide = slideItems[slideIndex - 1];
+      setFocusAfterAction({
+        id: previousSlide.id,
+        position: previousSlide.content.length,
+      });
+      return true;
+    }
+
+    if (
+      (key === "ArrowDown" || key === "ArrowRight") &&
+      isAtEnd &&
+      slideIndex < slideItems.length - 1
+    ) {
+      const nextSlide = slideItems[slideIndex + 1];
+      setFocusAfterAction({
+        id: nextSlide.id,
+        position: 0,
+      });
+      return true;
+    }
+
+    return false;
+  };
+
   const handleKeyDown = (
     e: React.KeyboardEvent<HTMLTextAreaElement>,
     id: string,
@@ -261,106 +328,15 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
 
     const slideIndex = slideItems.findIndex((item) => item.id === id);
 
-    // Handle Backspace and ArrowUp/Left at the beginning
-    if (slideIndex > 0) {
-      const previousSlide = slideItems[slideIndex - 1];
-      const currentSlide = slideItems[slideIndex];
-
-      if (e.key === "Backspace" && isAtBeginning) {
-        e.preventDefault(); // Prevent default backspace behavior
-
-        // Merge content with a newline in between
-        const mergedContent =
-          previousSlide.content + "\n" + currentSlide.content;
-
-        // Create a new array of items
-        const newSlideItems = slideItems
-          .map((item, index) => {
-            if (index === slideIndex - 1) {
-              // Update the previous slide with merged content
-              return { ...item, content: mergedContent };
-            }
-            // Keep other slides as they are, excluding the current one
-            return index !== slideIndex ? item : null;
-          })
-          .filter((item) => item !== null) as SlideItem[];
-
-        // Calculate cursor position in the merged slide:
-        // length of previous slide's original content + 1 for the added newline
-        const newCursorPosition = previousSlide.content.length + 1;
-
-        setSlideItems(newSlideItems);
-        internalUpdateRef.current = true;
-        onMarkdownChange(
-          newSlideItems.map((item) => item.content).join("\n\n---\n\n"),
-        );
-
-        // Set state to trigger focus and cursor position update in the effect
-        setFocusAfterAction({
-          id: previousSlide.id, // Focus the merged slide (which is the previous slide's ID)
-          position: newCursorPosition,
-        });
-      } else if (
-        (e.key === "ArrowUp" || e.key === "ArrowLeft") &&
-        isAtBeginning
-      ) {
-        e.preventDefault(); // Prevent default arrow key behavior
-
-        // Set state to trigger focus and cursor position update in the effect
-        setFocusAfterAction({
-          id: previousSlide.id, // Focus the previous slide
-          position: previousSlide.content.length, // Set cursor to the end of previous slide
-        });
+    if (e.key === "Backspace" && isAtBeginning) {
+      if (handleBackspaceAtBeginning(slideIndex)) {
+        e.preventDefault();
       }
-    }
-
-    // Handle Delete and ArrowDown/Right at the end
-    if (slideIndex < slideItems.length - 1) {
-      // There is a next slide
-      const nextSlide = slideItems[slideIndex + 1];
-      const currentSlide = slideItems[slideIndex];
-
-      if (e.key === "Delete" && isAtEnd) {
-        e.preventDefault(); // Prevent default delete behavior
-
-        // Merge content with a newline in between
-        const mergedContent = currentSlide.content + "\n" + nextSlide.content;
-
-        // Create a new array of items
-        const newSlideItems = slideItems
-          .map((item, index) => {
-            if (index === slideIndex) {
-              // Update the current slide with merged content
-              return { ...item, content: mergedContent };
-            }
-            // Keep other slides as they are, excluding the next one
-            return index !== slideIndex + 1 ? item : null;
-          })
-          .filter((item) => item !== null) as SlideItem[];
-
-        // Calculate cursor position in the merged slide:
-        // length of current slide's original content + 1 for the added newline
-        const newCursorPosition = currentSlide.content.length + 1;
-
-        setSlideItems(newSlideItems);
-        internalUpdateRef.current = true;
-        onMarkdownChange(
-          newSlideItems.map((item) => item.content).join("\n\n----\n\n"),
-        );
-
-        // Set state to trigger focus and cursor position update in the effect
-        setFocusAfterAction({
-          id: currentSlide.id, // Focus the merged slide (which is the current slide's ID)
-          position: newCursorPosition,
-        });
-      } else if ((e.key === "ArrowDown" || e.key === "ArrowRight") && isAtEnd) {
-        e.preventDefault(); // Prevent default arrow key behavior
-
-        // Set state to trigger focus and cursor position update in the effect
-        setFocusAfterAction({
-          id: nextSlide.id, // Focus the next slide
-          position: 0, // Set cursor to the beginning of next slide
-        });
+    } else if (
+      ["ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"].includes(e.key)
+    ) {
+      if (handleArrowNavigation(e.key, slideIndex, isAtBeginning, isAtEnd)) {
+        e.preventDefault();
       }
     }
 
