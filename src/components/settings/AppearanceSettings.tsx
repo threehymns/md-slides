@@ -1,10 +1,11 @@
+import React from "react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { SettingsSectionProps } from "./types";
 
-import React from 'react';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { SettingsSectionProps } from './types';
-
-const AppearanceSettings: React.FC<Omit<SettingsSectionProps, 'onStyleChange'>> = ({ settings, onSettingChange }) => {
+const AppearanceSettings: React.FC<
+  Omit<SettingsSectionProps, "onStyleChange">
+> = ({ settings, onSettingChange }) => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -14,7 +15,9 @@ const AppearanceSettings: React.FC<Omit<SettingsSectionProps, 'onStyleChange'>> 
         <Switch
           id="progress-bar"
           checked={settings.showProgressBar}
-          onCheckedChange={(checked) => onSettingChange('showProgressBar', checked)}
+          onCheckedChange={(checked) =>
+            onSettingChange("showProgressBar", checked)
+          }
         />
       </div>
 
@@ -25,7 +28,22 @@ const AppearanceSettings: React.FC<Omit<SettingsSectionProps, 'onStyleChange'>> 
         <Switch
           id="slide-counter"
           checked={settings.showSlideCounter}
-          onCheckedChange={(checked) => onSettingChange('showSlideCounter', checked)}
+          onCheckedChange={(checked) =>
+            onSettingChange("showSlideCounter", checked)
+          }
+        />
+      </div>
+
+      <div className="flex items-center justify-between">
+        <Label htmlFor="slide-numbers" className="text-sm font-medium">
+          Show Slide Numbers
+        </Label>
+        <Switch
+          id="slide-numbers"
+          checked={settings.showSlideNumbers}
+          onCheckedChange={(checked) =>
+            onSettingChange("showSlideNumbers", checked)
+          }
         />
       </div>
     </div>
