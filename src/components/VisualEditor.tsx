@@ -213,6 +213,7 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
     internalUpdateRef.current = true;
     // Notify parent of the change
     onMarkdownChange(newItems.map((item) => item.content).join("\n\n---\n\n"));
+    return newSlide.id; // Return the ID of the newly added slide
   };
 
   const handleDeleteSlide = (idToDelete: string) => {
@@ -261,6 +262,7 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
     const isAtEnd =
       textarea.selectionStart === textarea.value.length &&
       textarea.selectionEnd === textarea.value.length;
+    const cursorPosition = textarea.selectionStart;
 
     const slideIndex = slideItems.findIndex((item) => item.id === id);
 
@@ -290,7 +292,7 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
 
         // Calculate cursor position in the merged slide:
         // length of previous slide's original content + 1 for the added newline
-        const cursorPosition = previousSlide.content.length + 1;
+        const newCursorPosition = previousSlide.content.length + 1;
 
         setSlideItems(newSlideItems);
         internalUpdateRef.current = true;
@@ -301,7 +303,7 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
         // Set state to trigger focus and cursor position update in the effect
         setFocusAfterAction({
           id: previousSlide.id, // Focus the merged slide (which is the previous slide's ID)
-          position: cursorPosition,
+          position: newCursorPosition,
         });
       } else if (
         (e.key === "ArrowUp" || e.key === "ArrowLeft") &&
@@ -317,18 +319,109 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
       }
     }
 
-    // Handle ArrowDown/Right at the end
+    // Handle Delete and ArrowDown/Right at the end
     if (slideIndex < slideItems.length - 1) {
       // There is a next slide
       const nextSlide = slideItems[slideIndex + 1];
+      const currentSlide = slideItems[slideIndex];
 
-      if ((e.key === "ArrowDown" || e.key === "ArrowRight") && isAtEnd) {
+      if (e.key === "Delete" && isAtEnd) {
+        e.preventDefault(); // Prevent default delete behavior
+
+        // Merge content with a newline in between
+        const mergedContent = currentSlide.content + "\n" + nextSlide.content;
+
+        // Create a new array of items
+        const newSlideItems = slideItems
+          .map((item, index) => {
+            if (index === slideIndex) {
+              // Update the current slide with merged content
+              return { ...item, content: mergedContent };
+            }
+            // Keep other slides as they are, excluding the next one
+            return index !== slideIndex + 1 ? item : null;
+          })
+          .filter((item) => item !== null) as SlideItem[];
+
+        // Calculate cursor position in the merged slide:
+        // length of current slide's original content + 1 for the added newline
+        const newCursorPosition = currentSlide.content.length + 1;
+
+        setSlideItems(newSlideItems);
+        internalUpdateRef.current = true;
+        onMarkdownChange(
+          newSlideItems.map((item) => item.content).join("\n\n----\n\n"),
+        );
+
+        // Set state to trigger focus and cursor position update in the effect
+        setFocusAfterAction({
+          id: currentSlide.id, // Focus the merged slide (which is the current slide's ID)
+          position: newCursorPosition,
+        });
+      } else if ((e.key === "ArrowDown" || e.key === "ArrowRight") && isAtEnd) {
         e.preventDefault(); // Prevent default arrow key behavior
 
         // Set state to trigger focus and cursor position update in the effect
         setFocusAfterAction({
           id: nextSlide.id, // Focus the next slide
           position: 0, // Set cursor to the beginning of next slide
+        });
+      }
+    }
+
+    // Handle Ctrl/Cmd + Enter for splitting slide
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault(); // Prevent default behavior (new line)
+
+      const currentSlide = slideItems[slideIndex];
+      const content = currentSlide.content;
+      const contentBeforeCursor = content.substring(0, cursorPosition);
+      const contentAfterCursor = content.substring(cursorPosition);
+
+      // Update current slide content
+      const updatedCurrentSlide = {
+        ...currentSlide,
+        content: contentBeforeCursor,
+      };
+
+      // Create new slide for content after cursor
+      const newSlide: SlideItem = {
+        id: generateUniqueId(),
+        content: contentAfterCursor || DEFAULT_NEW_SLIDE_CONTENT, // Use default content if splitting at the very end
+      };
+
+      // Insert the new slide after the current one
+      const newSlideItems = [
+        ...slideItems.slice(0, slideIndex),
+        updatedCurrentSlide,
+        newSlide,
+        ...slideItems.slice(slideIndex + 1),
+      ];
+
+      setSlideItems(newSlideItems);
+      internalUpdateRef.current = true;
+      onMarkdownChange(
+        newSlideItems.map((item) => item.content).join("\n\n---\n\n"),
+      );
+
+      // Set focus to the new slide at the beginning
+      setFocusAfterAction({
+        id: newSlide.id,
+        position: 0,
+      });
+    }
+
+    // Handle Ctrl/Cmd + Shift + Enter for inserting new slide
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && e.shiftKey) {
+      e.preventDefault(); // Prevent default behavior
+
+      const newSlideId = handleAddSlide(id); // Use the existing add slide function
+
+      // Set focus to the newly added slide at the beginning
+      if (newSlideId) {
+        setFocusAfterAction({
+          id: newSlideId,
+          position: 0,
         });
       }
     }
