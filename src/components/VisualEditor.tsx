@@ -165,29 +165,19 @@ const VisualEditor: React.FC<VisualEditorProps> = ({
     let newItems = [...slideItems];
 
     if (afterId === null || slideItems.length === 0) {
-      // If afterId is null (e.g. "Add First Slide" button) or if slideItems is somehow empty
-      newItems = [
-        newSlide,
-        ...newItems.filter(
-          (item) =>
-            item.content !== DEFAULT_NEW_SLIDE_CONTENT || newItems.length > 1,
-        ),
-      ];
-      // Filter out initial default slide if it exists and we're adding a new one, unless it was the only one.
-      if (
-        newItems.length > 1 &&
-        newItems[1]?.content === DEFAULT_NEW_SLIDE_CONTENT &&
-        newItems[1]?.id !== newSlide.id
+      // Add to beginning
+      if (slideItems.length === 0) {
+        newItems = [newSlide];
+      } else if (
+        slideItems.length === 1 &&
+        slideItems[0].content === DEFAULT_NEW_SLIDE_CONTENT
       ) {
-        if (
-          slideItems.length === 1 &&
-          slideItems[0].content === DEFAULT_NEW_SLIDE_CONTENT
-        ) {
-          newItems.shift(); // Remove the original default slide if it was the only one and now we add a new one
-        }
+        // Replace the default empty slide
+        newItems = [newSlide];
+      } else {
+        // Add to beginning of existing slides
+        newItems = [newSlide, ...slideItems];
       }
-      // If the list was truly empty and we add one, ensure it's just the new slide.
-      if (slideItems.length === 0) newItems = [newSlide];
     } else {
       const insertAtIndex = newItems.findIndex((item) => item.id === afterId);
       if (insertAtIndex !== -1) {
