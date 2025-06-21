@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus, FileText, GripVertical, FolderOpen, Search } from 'lucide-react';
-import { AnimatePresence, Reorder, motion } from 'framer-motion';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Plus, FileText, GripVertical, FolderOpen, Search } from "lucide-react";
+import { AnimatePresence, Reorder, motion } from "framer-motion";
 import {
   Sidebar,
   SidebarContent,
@@ -11,13 +11,17 @@ import {
   SidebarGroupContent,
   SidebarMenu,
   SidebarMenuItem,
-} from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { usePresentations } from '@/contexts/PresentationsContext';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Presentation, SlideDeck } from '@/types';
-import { EditableTitle, ActionButtons } from '@/components/common/EditableItem';
+} from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { usePresentations } from "@/contexts/PresentationsContext";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Presentation, SlideDeck } from "@/types";
+import { EditableTitle, ActionButtons } from "@/components/common/EditableItem";
 
 interface DraggablePresentationProps {
   presentation: Presentation;
@@ -39,7 +43,7 @@ interface SlideDeckItemProps {
 }
 
 interface DraggedSlideDeckData {
-  type: 'slideDeck';
+  type: "slideDeck";
   deckId: string;
 }
 
@@ -52,13 +56,16 @@ const SlideDeckItem: React.FC<SlideDeckItemProps> = ({
   onRemove,
   isStandalone = false,
 }) => {
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+
   const handleDragStart = (e: React.DragEvent) => {
     if (isStandalone) {
-      e.dataTransfer.setData('application/json',
+      e.dataTransfer.setData(
+        "application/json",
         JSON.stringify({
-          type: 'slideDeck',
-          deckId: deck.id
-        })
+          type: "slideDeck",
+          deckId: deck.id,
+        }),
       );
     }
   };
@@ -77,9 +84,9 @@ const SlideDeckItem: React.FC<SlideDeckItemProps> = ({
       <div
         className={`
           group/item flex items-center gap-2 p-2
-          ${isStandalone ? '' : 'ml-4'} rounded-md
+          ${isStandalone ? "" : "ml-4"} rounded-md
           cursor-pointer transition-colors
-          ${isSelected ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent/50'}
+          ${isSelected ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"}
         `}
         draggable={isStandalone} // Only draggable if standalone
         onDragStart={handleDragStart}
@@ -92,11 +99,14 @@ const SlideDeckItem: React.FC<SlideDeckItemProps> = ({
           onRename={onRename}
           inputClassName="h-5 text-xs"
           spanClassName="text-xs"
+          isEditingExternally={isEditingTitle}
+          onStopEditing={() => setIsEditingTitle(false)}
         />
         <ActionButtons
-          onEdit={() => { /* EditableTitle handles its own editing state */ }}
+          onEdit={() => setIsEditingTitle(true)}
           onDelete={onDelete}
           onRemove={onRemove}
+          isEditing={isEditingTitle}
           isStandalone={isStandalone}
           buttonClassName="h-5 w-5 p-0"
           iconClassName="h-2 w-2"
@@ -112,7 +122,7 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
   onSelect,
   onDelete,
   onRename,
-  updateSlideDeck
+  updateSlideDeck,
 }) => {
   const navigate = useNavigate();
   const {
@@ -121,9 +131,10 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
     removeSlideDeckFromPresentation,
     reorderSlideDecksInPresentation,
     getPresentationSlideDecks,
-    addSlideDeckToPresentation
+    addSlideDeckToPresentation,
   } = usePresentations();
-  
+
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isOpen, setIsOpen] = useState(isSelected);
 
   const presentationSlideDecks = getPresentationSlideDecks(presentation.id);
@@ -144,12 +155,14 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
     e.preventDefault();
     e.stopPropagation();
     try {
-      const data: DraggedSlideDeckData = JSON.parse(e.dataTransfer.getData('application/json'));
-      if (data.type === 'slideDeck' && data.deckId) {
+      const data: DraggedSlideDeckData = JSON.parse(
+        e.dataTransfer.getData("application/json"),
+      );
+      if (data.type === "slideDeck" && data.deckId) {
         addSlideDeckToPresentation(presentation.id, data.deckId);
       }
     } catch (error) {
-      console.error('Error handling drop:', error);
+      console.error("Error handling drop:", error);
     }
   };
 
@@ -172,7 +185,7 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
           className={`
             group/item flex items-center gap-2 p-2
             rounded-md cursor-pointer transition-colors
-            ${isSelected ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent/50'}
+            ${isSelected ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"}
           `}
           onClick={onSelect}
           layout
@@ -188,11 +201,14 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
             onRename={onRename}
             inputClassName="h-6 text-xs"
             spanClassName="text-sm"
+            isEditingExternally={isEditingTitle}
+            onStopEditing={() => setIsEditingTitle(false)}
           />
           <ActionButtons
-            onEdit={() => { /* EditableTitle handles its own editing state */ }}
+            onEdit={() => setIsEditingTitle(true)}
             onDelete={onDelete}
             buttonClassName="h-6 w-6 p-0"
+            isEditing={isEditingTitle}
             iconClassName="h-3 w-3"
             isStandalone={true} // Presentations are always standalone in this context for delete button
           />
@@ -205,10 +221,15 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
           <motion.div
             layout
             initial={{ opacity: 0, scale: 0.9, height: 0 }}
-            animate={{ opacity: 1, scale: 1, height: 'auto' }}
+            animate={{ opacity: 1, scale: 1, height: "auto" }}
             transition={{ duration: 0.2 }}
           >
-            <Reorder.Group axis="y" values={presentationSlideDecks} onReorder={handleReorderDecks} className="space-y-1 pt-1">
+            <Reorder.Group
+              axis="y"
+              values={presentationSlideDecks}
+              onReorder={handleReorderDecks}
+              className="space-y-1 pt-1"
+            >
               <AnimatePresence>
                 {presentationSlideDecks.map((deck: SlideDeck) => (
                   <SlideDeckItem
@@ -219,18 +240,24 @@ const DraggablePresentation: React.FC<DraggablePresentationProps> = ({
                       setCurrentSlideDeck(deck.id);
                       navigate(`/edit`);
                     }}
-                    onRemove={() => removeSlideDeckFromPresentation(presentation.id, deck.id)}
+                    onRemove={() =>
+                      removeSlideDeckFromPresentation(presentation.id, deck.id)
+                    }
                     isStandalone={false}
-                    onRename={(newTitle) => updateSlideDeck(deck.id, { title: newTitle })}
+                    onRename={(newTitle) =>
+                      updateSlideDeck(deck.id, { title: newTitle })
+                    }
                   />
                 ))}
               </AnimatePresence>
             </Reorder.Group>
             {presentationSlideDecks.length === 0 && (
-              <div className="
+              <div
+                className="
                 text-xs text-sidebar-foreground/60
                 p-2 ml-4 text-center
-              ">
+              "
+              >
                 Drop slide decks here
               </div>
             )}
@@ -258,13 +285,13 @@ export function AppSidebar() {
     createSlideDeck,
     deleteSlideDeck,
     setCurrentSlideDeck,
-    updateSlideDeck
+    updateSlideDeck,
   } = usePresentations();
-  
-  const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredSlideDecks = slideDecks.filter(deck =>
-    deck.title.toLowerCase().includes(searchTerm.toLowerCase())
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredSlideDecks = slideDecks.filter((deck) =>
+    deck.title.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleCreatePresentation = () => {
@@ -309,7 +336,11 @@ export function AppSidebar() {
           </div>
           <SidebarGroupContent>
             <SidebarMenu>
-              <Reorder.Group axis="y" values={presentations} onReorder={handleReorderPresentations}>
+              <Reorder.Group
+                axis="y"
+                values={presentations}
+                onReorder={handleReorderPresentations}
+              >
                 <AnimatePresence>
                   {presentations.map((presentation) => (
                     <DraggablePresentation
@@ -321,7 +352,9 @@ export function AppSidebar() {
                         navigate(`/`);
                       }}
                       onDelete={() => deletePresentation(presentation.id)}
-                      onRename={(newTitle) => updatePresentation(presentation.id, { title: newTitle })}
+                      onRename={(newTitle) =>
+                        updatePresentation(presentation.id, { title: newTitle })
+                      }
                       updateSlideDeck={updateSlideDeck}
                     />
                   ))}
@@ -367,7 +400,10 @@ export function AppSidebar() {
                 values={filteredSlideDecks}
                 onReorder={(newOrder: SlideDeck[]) => {
                   if (currentPresentationId) {
-                    reorderSlideDecksInPresentation(currentPresentationId, newOrder);
+                    reorderSlideDecksInPresentation(
+                      currentPresentationId,
+                      newOrder,
+                    );
                   } else {
                     reorderSlideDecks(newOrder);
                   }
@@ -381,17 +417,21 @@ export function AppSidebar() {
                       isSelected={currentSlideDeckId === deck.id}
                       onSelect={() => handleSlideDeckSelect(deck.id)}
                       onDelete={() => deleteSlideDeck(deck.id)}
-                      onRename={(newTitle) => updateSlideDeck(deck.id, { title: newTitle })}
+                      onRename={(newTitle) =>
+                        updateSlideDeck(deck.id, { title: newTitle })
+                      }
                       isStandalone={true}
                     />
                   ))}
                 </AnimatePresence>
               </Reorder.Group>
               {filteredSlideDecks.length === 0 && slideDecks.length > 0 && (
-                <div className="
+                <div
+                  className="
                   text-xs text-sidebar-foreground/60
                   p-2 text-center
-                ">
+                "
+                >
                   No matching slide decks
                 </div>
               )}
