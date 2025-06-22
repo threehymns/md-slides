@@ -1,144 +1,54 @@
-
 import React from 'react';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { AlignLeft, AlignCenter, AlignRight, AlignJustify } from 'lucide-react';
-import { SettingsSectionProps } from './types';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { SETTINGS_CONFIG, SettingConfig, EnumSetting } from '@/settings';
+import SettingItem from './SettingItem';
+import { AlignLeft, AlignCenter, AlignRight, AlignJustify, LucideIcon } from 'lucide-react'; // Import icons
 
-const StyleSettings: React.FC<Omit<SettingsSectionProps, 'onSettingChange'>> = ({ settings, onStyleChange }) => {
+// Helper to get Lucide icons for text alignment
+const getTextAlignIcon = (value: string): LucideIcon | undefined => {
+  switch (value) {
+    case 'left': return AlignLeft;
+    case 'center': return AlignCenter;
+    case 'right': return AlignRight;
+    case 'justify': return AlignJustify;
+    default: return undefined;
+  }
+};
+
+const StyleSettings: React.FC = () => {
+  const styleSettings = SETTINGS_CONFIG.filter(
+    (setting) => setting.category === 'style'
+  );
+
+  if (!styleSettings.length) {
+    return <p>No style settings available.</p>;
+  }
+
   return (
-    <div className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
-          <Label className="text-sm font-medium mb-2 block">
-            Text Color
-          </Label>
-          <div className="flex items-center gap-2">
-            <input
-              type="color"
-              value={settings.style.textColor || '#000000'}
-              onChange={(e) => onStyleChange('textColor', e.target.value)}
-              className="p-1 h-10 w-10 block bg-card border border-input rounded-md cursor-pointer"
-              title="Select text color"
-            />
-            <Input
-              value={settings.style.textColor || ''}
-              onChange={(e) => onStyleChange('textColor', e.target.value)}
-              placeholder="e.g. #1a2b3c"
-              className="flex-1"
-            />
-            <Button variant="ghost" size="sm" onClick={() => onStyleChange('textColor', undefined)}>
-              Reset
-            </Button>
-          </div>
-        </div>
-
-        <div>
-          <Label className="text-sm font-medium mb-2 block">
-            Background Color
-          </Label>
-          <div className="flex items-center gap-2">
-            <input
-              type="color"
-              value={settings.style.backgroundColor || '#ffffff'}
-              onChange={(e) => onStyleChange('backgroundColor', e.target.value)}
-              className="p-1 h-10 w-10 block bg-card border border-input rounded-md cursor-pointer"
-              title="Select background color"
-            />
-            <Input
-              value={settings.style.backgroundColor || ''}
-              onChange={(e) => onStyleChange('backgroundColor', e.target.value)}
-              placeholder="e.g. #ffffff"
-              className="flex-1"
-            />
-            <Button variant="ghost" size="sm" onClick={() => onStyleChange('backgroundColor', undefined)}>
-              Reset
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <Label htmlFor="font-family" className="text-sm font-medium mb-2 block">
-          Font Family
-        </Label>
-        <Select
-          value={settings.style.fontFamily}
-          onValueChange={(value) => onStyleChange('fontFamily', value)}
-        >
-          <SelectTrigger id="font-family">
-            <SelectValue placeholder="Select a font" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="system-ui, sans-serif">System UI</SelectItem>
-            <SelectItem value="serif">Serif</SelectItem>
-            <SelectItem value="monospace">Monospace</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label htmlFor="font-size" className="text-sm font-medium mb-2 block">
-          Font Size ({settings.style.fontSize.toFixed(1)}vw)
-        </Label>
-        <Slider
-          id="font-size"
-          min={1}
-          max={10}
-          step={0.1}
-          value={[settings.style.fontSize]}
-          onValueChange={([value]) => onStyleChange('fontSize', value)}
-        />
-      </div>
-      
-      <div>
-        <Label htmlFor="line-height" className="text-sm font-medium mb-2 block">
-          Line Height ({settings.style.lineHeight.toFixed(1)})
-        </Label>
-        <Slider
-          id="line-height"
-          min={1}
-          max={3}
-          step={0.1}
-          value={[settings.style.lineHeight]}
-          onValueChange={([value]) => onStyleChange('lineHeight', value)}
-        />
-      </div>
-
-      <div>
-        <Label className="text-sm font-medium mb-2 block">
-          Text Alignment
-        </Label>
-        <ToggleGroup
-          type="single"
-          value={settings.style.textAlign}
-          onValueChange={(value) => value && onStyleChange('textAlign', value)}
-          className="justify-start"
-        >
-          <ToggleGroupItem value="left" aria-label="Align left">
-            <AlignLeft className="h-4 w-4" />
-          </ToggleGroupItem>
-          <ToggleGroupItem value="center" aria-label="Align center">
-            <AlignCenter className="h-4 w-4" />
-          </ToggleGroupItem>
-          <ToggleGroupItem value="right" aria-label="Align right">
-            <AlignRight className="h-4 w-4" />
-          </ToggleGroupItem>
-          <ToggleGroupItem value="justify" aria-label="Align justify">
-            <AlignJustify className="h-4 w-4" />
-          </ToggleGroupItem>
-        </ToggleGroup>
-      </div>
+    <div className="space-y-6"> {/* Adjusted spacing from space-y-8 to space-y-6 to be closer to SettingItem's py-2 */}
+      {styleSettings.map((setting) => {
+        // Special handling for ToggleGroup with icons if needed
+        if (setting.id === 'style.textAlign' && setting.component === 'ToggleGroup') {
+          const enumSetting = setting as EnumSetting<string>;
+          const optionsWithIcons = enumSetting.options.map(opt => {
+            const Icon = getTextAlignIcon(opt.value as string);
+            return {
+              ...opt,
+              // Pass the icon component if SettingItem is adapted to use it,
+              // or render ToggleGroup directly here if more complex customization is needed.
+              // For now, SettingItem uses text labels. If icons are a must,
+              // SettingItem's ToggleGroup case needs to be enhanced.
+              // Let's assume SettingItem's current ToggleGroup is sufficient for now.
+              // If not, we'd customize here or enhance SettingItem.
+              // For demonstration, if SettingItem could take an icon prop for options:
+              // icon: Icon
+            };
+          });
+          // If we were to render a custom ToggleGroup here:
+          // return <CustomTextAlignToggleGroup key={setting.id} settingConfig={setting} options={optionsWithIcons} />
+          // But for now, we rely on SettingItem.
+        }
+        return <SettingItem key={setting.id} settingConfig={setting as SettingConfig} />;
+      })}
     </div>
   );
 };

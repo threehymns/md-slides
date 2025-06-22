@@ -1,35 +1,23 @@
-
 import React from 'react';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { SettingsSectionProps } from './types';
+import { SETTINGS_CONFIG, SettingConfig } from '@/settings';
+import SettingItem from './SettingItem';
 
-const NavigationSettings: React.FC<Omit<SettingsSectionProps, 'onStyleChange'>> = ({ settings, onSettingChange }) => {
-    return (
-        <div className="space-y-6">
-        <div className="flex items-center justify-between">
-            <Label htmlFor="navigation-hint" className="text-sm font-medium">
-            Show Navigation Hint
-            </Label>
-            <Switch
-            id="navigation-hint"
-            checked={settings.showNavigationHint}
-            onCheckedChange={(checked) => onSettingChange('showNavigationHint', checked)}
-            />
-        </div>
+const NavigationSettings: React.FC = () => {
+  const navigationSettings = SETTINGS_CONFIG.filter(
+    (setting) => setting.category === 'navigation'
+  );
 
-        <div className="flex items-center justify-between">
-            <Label htmlFor="auto-hide" className="text-sm font-medium">
-            Auto-hide Controls
-            </Label>
-            <Switch
-            id="auto-hide"
-            checked={settings.autoHideControls}
-            onCheckedChange={(checked) => onSettingChange('autoHideControls', checked)}
-            />
-        </div>
-        </div>
-    );
+  if (!navigationSettings.length) {
+    return <p>No navigation settings available.</p>;
+  }
+
+  return (
+    <div className="space-y-4">
+      {navigationSettings.map((setting) => (
+        <SettingItem key={setting.id} settingConfig={setting as SettingConfig} />
+      ))}
+    </div>
+  );
 };
 
 export default NavigationSettings;

@@ -1,51 +1,21 @@
-import React from "react";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { SettingsSectionProps } from "./types";
+import React from 'react';
+import { SETTINGS_CONFIG, SettingConfig } from '@/settings';
+import SettingItem from './SettingItem';
 
-const AppearanceSettings: React.FC<
-  Omit<SettingsSectionProps, "onStyleChange">
-> = ({ settings, onSettingChange }) => {
+const AppearanceSettings: React.FC = () => {
+  const appearanceSettings = SETTINGS_CONFIG.filter(
+    (setting) => setting.category === 'appearance'
+  );
+
+  if (!appearanceSettings.length) {
+    return <p>No appearance settings available.</p>;
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <Label htmlFor="progress-bar" className="text-sm font-medium">
-          Show Progress Bar
-        </Label>
-        <Switch
-          id="progress-bar"
-          checked={settings.showProgressBar}
-          onCheckedChange={(checked) =>
-            onSettingChange("showProgressBar", checked)
-          }
-        />
-      </div>
-
-      <div className="flex items-center justify-between">
-        <Label htmlFor="slide-counter" className="text-sm font-medium">
-          Show Slide Counter
-        </Label>
-        <Switch
-          id="slide-counter"
-          checked={settings.showSlideCounter}
-          onCheckedChange={(checked) =>
-            onSettingChange("showSlideCounter", checked)
-          }
-        />
-      </div>
-
-      <div className="flex items-center justify-between">
-        <Label htmlFor="slide-numbers" className="text-sm font-medium">
-          Show Slide Numbers
-        </Label>
-        <Switch
-          id="slide-numbers"
-          checked={settings.showSlideNumbers}
-          onCheckedChange={(checked) =>
-            onSettingChange("showSlideNumbers", checked)
-          }
-        />
-      </div>
+    <div className="space-y-4">
+      {appearanceSettings.map((setting) => (
+        <SettingItem key={setting.id} settingConfig={setting as SettingConfig} />
+      ))}
     </div>
   );
 };

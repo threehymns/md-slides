@@ -3,13 +3,13 @@ import React, {
   useMemo,
   useState,
   useCallback,
-  useRef,
 } from "react";
 import { useNavigate } from "react-router-dom";
 import Settings from "./Settings";
 import { useTheme } from "@/components/ThemeProvider";
 import { usePresentations } from "@/contexts/PresentationsContext";
-import { AppSettings, SlideInfo } from "@/types";
+import { useSettings } from "@/contexts/SettingsContext"; // Import useSettings
+import { SlideInfo } from "@/types";
 import { marked } from "marked";
 
 // Configure marked to treat single newlines as <br> tags
@@ -19,18 +19,7 @@ marked.setOptions({
 
 const Slideshow = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [settings, setSettings] = useState<AppSettings>({
-    showProgressBar: false,
-    showSlideCounter: true,
-    showNavigationHint: true,
-    autoHideControls: false,
-    style: {
-      fontFamily: "system-ui, sans-serif",
-      fontSize: 5,
-      lineHeight: 1.6,
-      textAlign: "center",
-    },
-  });
+  const { settings } = useSettings(); // Use settings from context
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
@@ -153,7 +142,7 @@ const Slideshow = () => {
         className="w-full min-h-screen flex flex-col relative overflow-hidden bg-background text-foreground"
         style={{
           ...(!slides[currentSlide]?.background && {
-            backgroundColor: settings.style.backgroundColor,
+            backgroundColor: settings.style.backgroundColor ?? undefined, // Ensure undefined if null/empty
           }),
           ...(slides[currentSlide]?.background &&
             slides[currentSlide].mediaType === "image" && {
@@ -272,8 +261,7 @@ const Slideshow = () => {
       <Settings
         isOpen={isSettingsOpen}
         onClose={handleCloseSettings}
-        settings={settings}
-        onSettingsChange={setSettings}
+         // settings and onSettingsChange are no longer passed; Settings component uses context
       />
     </>
   );

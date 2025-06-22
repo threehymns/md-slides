@@ -16,21 +16,9 @@ export interface Presentation {
   updatedAt: Date;
 }
 
-export interface AppSettings {
-  showProgressBar: boolean;
-  showSlideCounter: boolean;
-  showNavigationHint: boolean;
-  autoHideControls: boolean;
-  showSlideNumbers: boolean;
-  style: {
-    fontFamily: string;
-    fontSize: number;
-    lineHeight: number;
-    textAlign: "left" | "center" | "right" | "justify";
-    textColor?: string;
-    backgroundColor?: string;
-  };
-}
+// AppSettings is now defined in @/settings/types.ts
+// Ensure all imports are updated to point to the new location:
+// import { AppSettings } from '@/settings';
 
 export interface SlideInfo {
   html: string;

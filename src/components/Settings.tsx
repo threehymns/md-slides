@@ -1,32 +1,43 @@
-
-import React, { useEffect, useState } from 'react';
-import { X, SettingsIcon } from 'lucide-react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { X, SettingsIcon as SettingsDialogIcon, Layout, Palette, Compass, Keyboard, Icon as LucideIcon } from 'lucide-react'; // Renamed SettingsIcon to avoid conflict
 import { Button } from '@/components/ui/button';
-import { AppSettings } from '@/types';
-import { CATEGORIES } from './settings/constants';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useSettings } from '@/contexts/SettingsContext'; // Import useSettings
+import { CATEGORIES_CONFIG } from '@/settings'; // Import CATEGORIES_CONFIG
+
 import SettingsSidebar from './settings/SettingsSidebar';
 import AppearanceSettings from './settings/AppearanceSettings';
 import StyleSettings from './settings/StyleSettings';
 import NavigationSettings from './settings/NavigationSettings';
-import KeyboardSettings from './settings/KeyboardSettings';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import KeyboardSettings from './settings/KeyboardSettings'; // Stays as is, informational
 
 interface SettingsProps {
   isOpen: boolean;
   onClose: () => void;
-  settings: AppSettings;
-  onSettingsChange: (settings: AppSettings) => void;
+  // settings and onSettingsChange are no longer needed as props, will be accessed via context
 }
 
-const Settings: React.FC<SettingsProps> = ({
-  isOpen,
-  onClose,
-  settings,
-  onSettingsChange
-}) => {
-  const [selectedCategory, setSelectedCategory] = useState('appearance');
+// Map icon names from config to actual Lucide components
+const iconMap: { [key: string]: LucideIcon } = {
+  Layout,
+  Palette,
+  Compass,
+  Keyboard,
+};
 
-  // Handle escape key to close settings modal
+const Settings: React.FC<SettingsProps> = ({ isOpen, onClose }) => {
+  // const { settings, updateSetting } = useSettings(); // Access settings and update function from context
+  // We don't directly use 'settings' or 'updateSetting' here, child components will.
+
+  const categories = useMemo(() => {
+    return CATEGORIES_CONFIG.map(cat => ({
+      ...cat,
+      icon: iconMap[cat.iconName] || SettingsDialogIcon, // Fallback icon
+    }));
+  }, []);
+
+  const [selectedCategory, setSelectedCategory] = useState(categories[0]?.id || 'appearance');
+
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && isOpen) {
@@ -44,75 +55,66 @@ const Settings: React.FC<SettingsProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSettingChange = (key: string, value: boolean) => {
-    onSettingsChange({
-      ...settings,
-      [key]: value
-    });
-  };
-
-  const handleStyleChange = (key: string, value: any) => {
-    onSettingsChange({
-      ...settings,
-      style: {
-        ...settings.style,
-        [key]: value,
-      },
-    });
-  };
-
-  // Render settings based on selected category
   const renderSettings = () => {
     switch (selectedCategory) {
       case 'appearance':
-        return <AppearanceSettings settings={settings} onSettingChange={handleSettingChange} />;
+        return <AppearanceSettings />; // Props no longer needed
       case 'style':
-        return <StyleSettings settings={settings} onStyleChange={handleStyleChange} />;
+        return <StyleSettings />; // Props no longer needed
       case 'navigation':
-        return <NavigationSettings settings={settings} onSettingChange={handleSettingChange} />;
+        return <NavigationSettings />; // Props no longer needed
       case 'keyboard':
-        return <KeyboardSettings />;
+        return <KeyboardSettings />; // No changes needed for this one
       default:
+        // Try to find if a category component exists even if not hardcoded
+        const categoryComponent = categories.find(c => c.id === selectedCategory);
+        if (categoryComponent) {
+            // This part would require dynamic component loading or a more robust mapping
+            // For now, returning null for unhandled dynamic categories.
+            console.warn(`No specific component renderer for category: ${selectedCategory}`);
+            return <div>Settings for {categoryComponent.name} (generic view not implemented)</div>;
+        }
         return null;
     }
   };
 
+  const currentCategoryDetails = categories.find(c => c.id === selectedCategory);
+  const CurrentCategoryIcon = currentCategoryDetails?.icon || SettingsDialogIcon;
+
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="relative w-full max-w-3xl mx-4 rounded-xl shadow-lg bg-card text-card-foreground flex flex-col h-[500px] border-t border-border">
-        <div className="flex items-center justify-between px-4 py-2">
-          <div className="flex items-center gap-2 ml-1">
-            <SettingsIcon className="h-4 w-4" />
-            <h2 className="text-sm font-semibold">Settings</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="relative w-full max-w-3xl mx-4 rounded-xl shadow-lg bg-card text-card-foreground flex flex-col h-[calc(100vh-4rem)] max-h-[700px] border">
+        <div className="flex items-center justify-between px-4 py-3 border-b">
+          <div className="flex items-center gap-2">
+            <SettingsDialogIcon className="h-5 w-5" />
+            <h2 className="text-lg font-semibold">Settings</h2>
           </div>
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={onClose}
-            className="h-8 w-8 p-0"
+            className="h-8 w-8"
           >
             <X className="h-4 w-4" />
           </Button>
         </div>
         
         <div className="flex flex-1 overflow-hidden">
-          <SettingsSidebar selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
+          <SettingsSidebar
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+          />
           
-          {/* Main content area */}
           <ScrollArea className="flex-1">
             <div className="p-6">
-              <h3 className="text-lg font-medium mb-6 capitalize flex items-center gap-2">
-                {(() => {
-                  const category = CATEGORIES.find(c => c.id === selectedCategory);
-                  const Icon = category?.icon;
-                  return (
-                    <>
-                      {Icon && <Icon className="h-5 w-5" />}
-                      {category?.name} Settings
-                    </>
-                  );
-                })()}
-              </h3>
+              {currentCategoryDetails && (
+                <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
+                  <CurrentCategoryIcon className="h-5 w-5" />
+                  {currentCategoryDetails.name}
+                </h3>
+              )}
               {renderSettings()}
             </div>
           </ScrollArea>
