@@ -1,18 +1,15 @@
 import React from 'react';
-import { SETTINGS_CONFIG, SettingConfig, EnumSetting } from '@/settings';
+import { SETTINGS_CONFIG } from '@/settings/config';
 import SettingItem from './SettingItem';
-import { AlignLeft, AlignCenter, AlignRight, AlignJustify, LucideIcon } from 'lucide-react'; // Import icons
+import { SettingConfig } from '@/settings/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Palette, Type, LayoutGrid } from 'lucide-react'; // Icons for card headers
 
-// Helper to get Lucide icons for text alignment
-const getTextAlignIcon = (value: string): LucideIcon | undefined => {
-  switch (value) {
-    case 'left': return AlignLeft;
-    case 'center': return AlignCenter;
-    case 'right': return AlignRight;
-    case 'justify': return AlignJustify;
-    default: return undefined;
-  }
-};
+interface SettingsGroup {
+  title: string;
+  icon: React.ElementType;
+  settings: SettingConfig[];
+}
 
 const StyleSettings: React.FC = () => {
   const styleSettings = SETTINGS_CONFIG.filter(
@@ -23,32 +20,42 @@ const StyleSettings: React.FC = () => {
     return <p>No style settings available.</p>;
   }
 
+  // Group settings into logical sections
+  const settingGroups: SettingsGroup[] = [
+    {
+      title: 'Colors',
+      icon: Palette,
+      settings: styleSettings.filter(s => ['style.textColor', 'style.backgroundColor'].includes(s.id)),
+    },
+    {
+      title: 'Typography',
+      icon: Type,
+      settings: styleSettings.filter(s => ['style.fontFamily', 'style.fontSize', 'style.lineHeight'].includes(s.id)),
+    },
+    {
+      title: 'Layout',
+      icon: LayoutGrid,
+      settings: styleSettings.filter(s => ['style.textAlign'].includes(s.id)),
+    },
+  ];
+
   return (
-    <div className="space-y-6"> {/* Adjusted spacing from space-y-8 to space-y-6 to be closer to SettingItem's py-2 */}
-      {styleSettings.map((setting) => {
-        // Special handling for ToggleGroup with icons if needed
-        if (setting.id === 'style.textAlign' && setting.component === 'ToggleGroup') {
-          const enumSetting = setting as EnumSetting<string>;
-          const optionsWithIcons = enumSetting.options.map(opt => {
-            const Icon = getTextAlignIcon(opt.value as string);
-            return {
-              ...opt,
-              // Pass the icon component if SettingItem is adapted to use it,
-              // or render ToggleGroup directly here if more complex customization is needed.
-              // For now, SettingItem uses text labels. If icons are a must,
-              // SettingItem's ToggleGroup case needs to be enhanced.
-              // Let's assume SettingItem's current ToggleGroup is sufficient for now.
-              // If not, we'd customize here or enhance SettingItem.
-              // For demonstration, if SettingItem could take an icon prop for options:
-              // icon: Icon
-            };
-          });
-          // If we were to render a custom ToggleGroup here:
-          // return <CustomTextAlignToggleGroup key={setting.id} settingConfig={setting} options={optionsWithIcons} />
-          // But for now, we rely on SettingItem.
-        }
-        return <SettingItem key={setting.id} settingConfig={setting as SettingConfig} />;
-      })}
+    <div className="space-y-6">
+      {settingGroups.map((group) => (
+        <Card key={group.title}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <group.icon className="h-5 w-5" />
+              {group.title}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-0">
+            {group.settings.map((setting) => (
+              <SettingItem key={setting.id} settingConfig={setting} />
+            ))}
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 };

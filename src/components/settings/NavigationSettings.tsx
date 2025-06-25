@@ -1,5 +1,5 @@
 import React from 'react';
-import { SETTINGS_CONFIG, SettingConfig } from '@/settings';
+import { SETTINGS_CONFIG } from '@/settings/config';
 import SettingItem from './SettingItem';
 
 const NavigationSettings: React.FC = () => {
@@ -14,7 +14,7 @@ const NavigationSettings: React.FC = () => {
   return (
     <div className="space-y-4">
       {navigationSettings.map((setting) => (
-        <SettingItem key={setting.id} settingConfig={setting as SettingConfig} />
+        <SettingItem key={setting.id} settingConfig={setting} />
       ))}
     </div>
   );

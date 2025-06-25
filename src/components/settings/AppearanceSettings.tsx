@@ -1,5 +1,5 @@
 import React from 'react';
-import { SETTINGS_CONFIG, SettingConfig } from '@/settings';
+import { SETTINGS_CONFIG } from '@/settings/config';
 import SettingItem from './SettingItem';
 
 const AppearanceSettings: React.FC = () => {
@@ -14,7 +14,7 @@ const AppearanceSettings: React.FC = () => {
   return (
     <div className="space-y-4">
       {appearanceSettings.map((setting) => (
-        <SettingItem key={setting.id} settingConfig={setting as SettingConfig} />
+        <SettingItem key={setting.id} settingConfig={setting} />
       ))}
     </div>
   );

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ImageIcon, VideoIcon, TextIcon, LayoutIcon } from "lucide-react";
 import { type SlideDeck } from "@/types";
-import { useAppSettings } from "../layouts/MainLayout";
+import { useSettings } from "@/contexts/SettingsContext";
 
 const EditPage = () => {
   const {
@@ -18,7 +18,8 @@ const EditPage = () => {
     updateSlideDeck,
   } = usePresentations();
 
-  const { showSlideNumbers } = useAppSettings();
+  const { settings } = useSettings();
+  const { showSlideNumbers } = settings.appearance;
 
   const currentDeck = getCurrentSlideDeck();
   const currentPresentation = getCurrentPresentation();
